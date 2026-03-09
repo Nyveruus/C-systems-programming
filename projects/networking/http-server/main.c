@@ -22,6 +22,7 @@ static volatile sig_atomic_t keep_running = 1;
 int create(int socket_fd, struct sockaddr_in *server);
 void *handler(void *arg);
 char *get_filename (char *file);
+char *get_extension(char *url_file)
 
 void signal_handler(int sig) {
     (void)sig;
@@ -107,7 +108,7 @@ void *handler(void *arg) {
             char *file = get_filename(url_file);
 
             char extension[32];
-            strcpy(extension, //get extension);
+            strcpy(extension, get_extension(url_file));
 
             //buld response
             //send to client
@@ -137,4 +138,12 @@ char *get_filename (char *file) {
     }
     result[result_len] = '\0';
     return result;
+}
+
+char *get_extension(char *url_file) {
+    char *point = strrchr(url_file, '.');
+    if (!point || point == url_file) {
+        return "";
+    }
+    return point + 1;
 }
