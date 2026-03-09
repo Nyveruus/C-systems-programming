@@ -22,7 +22,8 @@ static volatile sig_atomic_t keep_running = 1;
 int create(int socket_fd, struct sockaddr_in *server);
 void *handler(void *arg);
 char *get_filename (char *file);
-char *get_extension(char *url_file)
+char *get_extension(char *url_file);
+void build_http(char *file, char *extension, char *response, size_t response_len);
 
 void signal_handler(int sig) {
     (void)sig;
@@ -111,7 +112,14 @@ void *handler(void *arg) {
             strcpy(extension, get_extension(url_file));
 
             //buld response
+            char *response = malloc(BUFFER_SIZE * 2 * sizeof(char));
+            size_t response_len;
+            build_http(file, extension, response, &response_len);
             //send to client
+
+            //cleanup
+            free(response);
+            free(file);
         }
         regfree(&regex);
     }
@@ -146,4 +154,8 @@ char *get_extension(char *url_file) {
         return "";
     }
     return point + 1;
+}
+
+void build_http(char *file, char *extension, char *response, size_t response_len) {
+
 }
