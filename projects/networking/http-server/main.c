@@ -21,6 +21,7 @@ static volatile sig_atomic_t keep_running = 1;
 
 int create(int socket_fd, struct sockaddr_in *server);
 void *handler(void *arg);
+char *get_filename (char *file);
 
 void signal_handler(int sig) {
     (void)sig;
@@ -120,5 +121,20 @@ void *handler(void *arg) {
 }
 
 char *get_filename (char *file) {
-    ;
+    size_t len = strlen(file);
+    char *result = malloc(full_len + 1);
+    size_t result_len = 0;
+
+    for (size_t i = 0; i < len; i++) {
+        if (file[i] == '%' && i + 2 < len) {
+            int hex;
+            sscanf(file + i + 1, "%2x", &hex);
+            result[result_len++] = hex;
+            i += 2;
+        } else {
+            result[result_len++] = file[i];
+        }
+    }
+    result[result_len] = '\0';
+    return result;
 }
