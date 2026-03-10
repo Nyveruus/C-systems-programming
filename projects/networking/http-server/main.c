@@ -167,6 +167,7 @@ void build_http(char *file, char *extension, char *response, size_t *response_le
     if (fd < 0) {
         snprintf(response, BUFFER_SIZE, "HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\n\r\n404 Not Found");
         *response_len = strlen(response);
+        free(header);
         return;
     }
     snprintf(header, BUFFER_SIZE, "HTTP/1.1 200 OK\r\nContent-Type: %s\r\n\r\n", mime_type);
@@ -174,13 +175,14 @@ void build_http(char *file, char *extension, char *response, size_t *response_le
     *response_len = 0;
 
     memcpy(response, header, strlen(header));
+    free(header);
+
     *response_len += strlen(header);
 
     ssize_t red;
     while((red = read(fd, response + *response_len, BUFFER_SIZE - *response_len)) > 0)
         *response_len += red;
 
-    free(header);
     close(fd);
 }
 
