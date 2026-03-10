@@ -2,6 +2,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -116,7 +118,6 @@ void *handler(void *arg) {
             size_t response_len;
             build_http(file, extension, response, &response_len);
             //send to client
-
             //cleanup
             free(response);
             free(file);
@@ -156,7 +157,7 @@ char *get_extension(char *url_file) {
     return point + 1;
 }
 
-void build_http(char *file, char *extension, char *response, size_t response_len) {
+void build_http(char *file, char *extension, char *response, size_t *response_len) {
     char *mime_type = get_mime(extension);
     char *header = malloc(BUFFER_SIZE * sizeof(char));
 
@@ -168,6 +169,17 @@ void build_http(char *file, char *extension, char *response, size_t response_len
     }
     snprintf(header, BUFFER_SIZE, "HTTP/1.1 200 OK\r\nContent-Type: %s\r\n\r\n", mime_type);
 
+    *response_len = 0;
+
+    memcpy(response, header, strlen(header));
+    *response_len += strlen(header);
+
+    ssize_t red;
+    while((red = read(fd, response + *response_len, BUFFER_SIZE - *response_len)) > 0)
+        *response_len += red;
+
+    free(header);
+    close(fd);
 }
 
 char *get_mime(char *extension) {
