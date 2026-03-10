@@ -157,5 +157,29 @@ char *get_extension(char *url_file) {
 }
 
 void build_http(char *file, char *extension, char *response, size_t response_len) {
+    char *mime_type = get_mime(extension);
+    char *header = malloc(BUFFER_SIZE * sizeof(char));
 
+    int fd = open(file, O_RDONLY);
+    if (fd < 0) {
+        snprintf(response, BUFFER_SIZE, "HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\n\r\n404 Not Found");
+        *response_len = strlen(response);
+        return;
+    }
+    snprintf(header, BUFFER_SIZE, "HTTP/1.1 200 OK\r\nContent-Type: %s\r\n\r\n", mime_type);
+
+}
+
+char *get_mime(char *extension) {
+    if (strcasecmp(extension, "html") == 0)
+        return "text/html";
+    else if (strcasecmp(extension, "txt") == 0)
+        return "text/plain";
+    else if (strcasecmp(extension, "jpg") == 0 || strcasecmp(extension, "jpeg") == 0)
+        return "image/jpeg";
+    else if (strcasecmp(extension, "png") == 0) {
+        return "image/png";
+    else
+        return "application/octet-stream";
+    }
 }
