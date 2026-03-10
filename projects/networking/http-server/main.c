@@ -25,7 +25,8 @@ int create(int socket_fd, struct sockaddr_in *server);
 void *handler(void *arg);
 char *get_filename (char *file);
 char *get_extension(char *url_file);
-void build_http(char *file, char *extension, char *response, size_t response_len);
+void build_http(char *file, char *extension, char *response, size_t *response_len);
+char *get_mime(char *extension);
 
 void signal_handler(int sig) {
     (void)sig;
@@ -98,7 +99,7 @@ void *handler(void *arg) {
     int client_fd = *((int *)arg);
     free(arg);
 
-    char buffer[BUFFER_SIZE];
+    char *buffer = malloc(BUFFER_SIZE);
     ssize_t received = recv(client_fd, buffer, BUFFER_SIZE, 0);
     if (received > 0) {
         regex_t comp;
@@ -114,15 +115,16 @@ void *handler(void *arg) {
             strcpy(extension, get_extension(url_file));
 
             //buld response
-            char *response = malloc(BUFFER_SIZE * 2 * sizeof(char));
+            char *response = malloc(BUFFER_SIZE * 2);
             size_t response_len;
             build_http(file, extension, response, &response_len);
             //send to client
+            send(client_fd, response, response_len, 0);
             //cleanup
             free(response);
             free(file);
         }
-        regfree(&regex);
+        regfree(&comp);
     }
 
     free(buffer);
@@ -132,7 +134,7 @@ void *handler(void *arg) {
 
 char *get_filename (char *file) {
     size_t len = strlen(file);
-    char *result = malloc(full_len + 1);
+    char *result = malloc(len + 1);
     size_t result_len = 0;
 
     for (size_t i = 0; i < len; i++) {
@@ -159,7 +161,7 @@ char *get_extension(char *url_file) {
 
 void build_http(char *file, char *extension, char *response, size_t *response_len) {
     char *mime_type = get_mime(extension);
-    char *header = malloc(BUFFER_SIZE * sizeof(char));
+    char *header = malloc(BUFFER_SIZE);
 
     int fd = open(file, O_RDONLY);
     if (fd < 0) {
@@ -189,9 +191,8 @@ char *get_mime(char *extension) {
         return "text/plain";
     else if (strcasecmp(extension, "jpg") == 0 || strcasecmp(extension, "jpeg") == 0)
         return "image/jpeg";
-    else if (strcasecmp(extension, "png") == 0) {
+    else if (strcasecmp(extension, "png") == 0)
         return "image/png";
     else
         return "application/octet-stream";
-    }
 }
