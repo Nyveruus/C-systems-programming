@@ -17,7 +17,7 @@
 #define PORT 8080
 #define IP "127.0.0.1"
 #define BACKLOG 10
-#define BUFFER_SIZE 8192
+#define BUFFER_SIZE 52428800
 
 static volatile sig_atomic_t keep_running = 1;
 
@@ -100,6 +100,10 @@ void *handler(void *arg) {
     free(arg);
 
     char *buffer = malloc(BUFFER_SIZE);
+    if (!buffer) {
+        close(client_fd);
+        return NULL;
+    }
     ssize_t received = recv(client_fd, buffer, BUFFER_SIZE, 0);
     if (received > 0) {
         regex_t comp;
@@ -175,9 +179,9 @@ void build_http(char *file, char *extension, char *response, size_t *response_le
     *response_len = 0;
 
     memcpy(response, header, strlen(header));
-    free(header);
 
     *response_len += strlen(header);
+    free(header);
 
     ssize_t red;
     while((red = read(fd, response + *response_len, BUFFER_SIZE - *response_len)) > 0)
