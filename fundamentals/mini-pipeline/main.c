@@ -1,3 +1,5 @@
+//note: child processes inherit copies of fds
+
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
