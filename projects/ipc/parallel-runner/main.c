@@ -5,6 +5,7 @@
 #include <sys/wait.h>
 
 #define MAX 10
+#define BUFFER 1024
 
 int main(int argc, char *argv[]) {
     if (argc == 1) {
@@ -25,5 +26,20 @@ int main(int argc, char *argv[]) {
             exit(1);
         }
         close(pipes[i][1]);
+    }
+
+    for (int i = 0; i < argc - 1; i++) {
+        int status;
+        pid_t done = waitpid(-1, &status, 0);
+
+        int i = -1;
+        for (int j = 0; j < argc - 1; j++) {
+            if (pids[j] == done) { i = j; break; }
+        }
+
+        char buffer[BUFFER] = {0};
+        read(pipes[i][0], buffer, sizeof(buffer));
+        printf("[%d] %s\n", i, buffer);
+        close(pipes[i][0]);
     }
 }
