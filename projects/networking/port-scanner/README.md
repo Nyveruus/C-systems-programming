@@ -1,4 +1,4 @@
-# The Program
+# Stealthy Port Scanner
 
 This is a modular SYN (half-open) port scanner with multithreading and raw packet construction. It builds IP and TCP headers from scratch and manually computes checksums for the headers. Raw packet construction is necessary for sending SYN packets and not completing the handshake.
 
