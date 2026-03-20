@@ -7,14 +7,13 @@
 #include <arpa/inet.h>
 
 #define NUMBER 10
-#define MESSAGE "Hello world"
 
-int connectf(int socket_fd, char *argv[], struct sockaddr_in *server);
-void sendf(int socket_fd);
+int connectf(int socket_fd, char **argv, struct sockaddr_in *server);
+void sendf(int socket_fd, char **argv);
 
 int main(int argc, char *argv[]) {
-        if (argc != 3) {
-            printf("Usage: ./main <IP> <PORT>");
+        if (argc != 4) {
+            printf("Usage: ./main <IP> <PORT> <MESSAGE>");
             return 1;
         }
         int socket_fd;
@@ -28,13 +27,13 @@ int main(int argc, char *argv[]) {
             return 1;
         }
         // write
-        sendf(socket_fd);
+        sendf(socket_fd, argv + 3);
         // cleanup
         close(socket_fd);
         return 0;
 }
 
-int connectf(int socket_fd, char *argv[], struct sockaddr_in *server) {
+int connectf(int socket_fd, char **argv, struct sockaddr_in *server) {
     memset(server, 0, sizeof(struct sockaddr_in));
     server->sin_family = AF_INET;
     server->sin_port = htons(atoi(argv[2]));
@@ -47,10 +46,10 @@ int connectf(int socket_fd, char *argv[], struct sockaddr_in *server) {
     return 0;
 }
 
-void sendf(int socket_fd) {
+void sendf(int socket_fd, char **arg) {
     int n;
     for (int i = 0; i < NUMBER; i++) {
-        if ((n = write(socket_fd, MESSAGE, strlen(MESSAGE))) <= 0) {
+        if ((n = write(socket_fd, *arg, strlen(*arg))) <= 0) {
             printf("Connection closed");
             return;
         }
