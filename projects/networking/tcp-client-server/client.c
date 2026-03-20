@@ -17,7 +17,7 @@ int readaw(int socket_fd);
 
 int main(int argc, char *argv[]) {
     if (argc != 3) {
-        fprintf(stderr, "Usage: ./tcpclient <IP> <PORT>\n");
+        fprintf(stderr, "Usage: ./client <IP> <PORT>\n");
         return 1;
     }
 
