@@ -53,5 +53,6 @@ void sendf(int socket_fd, char **arg) {
             printf("Connection closed");
             return;
         }
+        write(socket_fd, "\n", 1);
     }
 }
