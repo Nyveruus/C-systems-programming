@@ -17,7 +17,7 @@
 
 int main(int argc, char *argv[]) {
     if (argc != 3) {
-        printf("Usage: ./tcpserver <IP> <PORT>\n");
+        printf("Usage: ./server <IP> <PORT>\n");
         return 1;
     }
     int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -34,11 +34,11 @@ int main(int argc, char *argv[]) {
     server.sin_addr.s_addr = inet_addr(argv[1]);
 
     if (bind(socket_fd, (struct sockaddr *)&server, addr_size) == -1) {
-        perror("Bind\n");
+        perror("Bind");
         goto cleanup;
     }
     if (listen(socket_fd, BACKLOG) == -1) {
-        perror("Listen\n");
+        perror("Listen");
         goto cleanup;
     }
 
@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
         if (r > 0 && (pollt[0].revents & POLLIN)) {
             int client_fd = accept(socket_fd, (struct sockaddr *)&peer, &addr_size);
             if (client_fd == -1) {
-                perror("Accept\n");
+                perror("Accept");
                 continue;
             } else {
                 char client_ip[INET_ADDRSTRLEN];
@@ -89,7 +89,7 @@ int main(int argc, char *argv[]) {
                     }
                 }
                 if (sent == 0) {
-                    printf("[no clients connected]\n");
+                    printf("\n[no clients connected]\n");
                 }
             }
         }
@@ -97,7 +97,7 @@ int main(int argc, char *argv[]) {
             if (pollt[i].fd != -1 && (pollt[i].revents & POLLIN)) {
                 ssize_t red = read(pollt[i].fd, buffer, sizeof(buffer));
                 if (red < 0) {
-                    perror("Read\n");
+                    perror("Read");
                     close(pollt[i].fd);
                     pollt[i].fd = -1;
                 } else if (red == 0) {
@@ -111,7 +111,7 @@ int main(int argc, char *argv[]) {
             }
         }
         if (r == -1) {
-            perror("Poll\n");
+            perror("Poll");
             goto cleanup;
         }
     }
