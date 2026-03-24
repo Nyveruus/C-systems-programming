@@ -4,9 +4,9 @@
 
 This program displays how I/O redirection fundamentally works in C by mimicking basic shell redirection operators
 
-- > overwrite output redirection
-- >> append output redirection
-- < input redirection
+- \> overwrite output redirection
+- \>\> append output redirection
+- \< input redirection
 
 Heredoc << is not covered
 
