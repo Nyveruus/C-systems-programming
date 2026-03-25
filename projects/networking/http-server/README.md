@@ -12,6 +12,9 @@ The handler starts with doing a recv of the client socket into a buffer and proc
 
 build_http uses the extension to find the MIME type and declares the header. It attempts to open a file descriptor for the requested file. If the file descriptor is unsuccessfully opened, then it frees the header and builds the response directly, returning 404 Not Found. If the file descriptor is succesfully opened, then it prepares the 200 OK header with the MIME type and saves it to the response before reading the file to the response - pointer arithmetic is used to not overwrite the header, i.e. reading to response + *response_len. After building the response, cleanup occurs for heap memory and the function ends.
 
+Important documentation:
+- https://www.rfc-editor.org/rfc/rfc2616
+
 ## Usage
 
 ```
