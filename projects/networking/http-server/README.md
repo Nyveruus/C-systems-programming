@@ -15,20 +15,41 @@ build_http uses the extension to find the MIME type and declares the header. It 
 Important documentation:
 - https://www.rfc-editor.org/rfc/rfc2616
 
-## Usage
+## Compilation and Usage
 
 ```
-
+$ gcc main.c -o main
+$ ./main
 ```
 
-## Installation
+## Examples
+
+- telnet
 
 ```
+$ ./main
+$ telnet 127.0.0.1 8080
+Trying 127.0.0.1...
+Connected to 127.0.0.1.
+Escape character is '^]'.
+GET /index.html HTTP/1.1
+HTTP/1.1 200 OK
+Content-Type: text/html
 
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF=8">
+    <title>My page</title>
+</head>
+<body>
+    <h1>Hello World</h1>
+    <img src="testimage.jpg">
+</body>
+</html>
+Connection closed by foreign host.
 ```
 
-## Example
+- browser
 
-```
-
-```
+<img src="BrowserExample.jpg">
