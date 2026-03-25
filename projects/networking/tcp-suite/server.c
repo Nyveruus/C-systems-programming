@@ -64,17 +64,16 @@ int main(int argc, char *argv[]) {
             if (client_fd == -1) {
                 perror("Accept");
                 continue;
-            } else {
-                char client_ip[INET_ADDRSTRLEN];
-                inet_ntop(AF_INET, &(peer.sin_addr.s_addr), client_ip, INET_ADDRSTRLEN);
-                printf("\n[client connected: %s]\n", client_ip);
-                for (int i = 2; i <= MAX_CLIENTS; i++) {
-                    if (pollt[i].fd == -1) {
-                        pollt[i].fd = client_fd;
-                        pollt[i].events = POLLIN;
-                        if (i >= nfds) nfds = i + 1;
-                        break;
-                    }
+            }
+            char client_ip[INET_ADDRSTRLEN];
+            inet_ntop(AF_INET, &(peer.sin_addr.s_addr), client_ip, INET_ADDRSTRLEN);
+            printf("\n[client connected: %s]\n", client_ip);
+            for (int i = 2; i <= MAX_CLIENTS; i++) {
+                if (pollt[i].fd == -1) {
+                    pollt[i].fd = client_fd;
+                    pollt[i].events = POLLIN;
+                    if (i >= nfds) nfds = i + 1;
+                    break;
                 }
             }
         }
@@ -104,10 +103,9 @@ int main(int argc, char *argv[]) {
                     printf("\n[client disconnected]\n");
                     close(pollt[i].fd);
                     pollt[i].fd = -1;
-                } else {
-                    fwrite(buffer, 1, red, stdout);
-                    fflush(stdout);
                 }
+                fwrite(buffer, 1, red, stdout);
+                fflush(stdout);
             }
         }
         if (r == -1) {
