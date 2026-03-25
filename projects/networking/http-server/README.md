@@ -24,7 +24,7 @@ $ ./main
 
 ## Examples
 
-- telnet
+### Telnet
 
 ```
 $ ./main
@@ -50,6 +50,6 @@ Content-Type: text/html
 Connection closed by foreign host.
 ```
 
-- browser
+### Browser
 
 <img src="BrowserExample.jpg">
