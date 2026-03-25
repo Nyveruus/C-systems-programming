@@ -4,7 +4,7 @@ HTTP/1.1 file server in C. it serves static files from the local filesystem over
 
 The server achitecturally follows a model of accept connection and then thread. In essence, a single main loop accepts incoming TCP connections and dispatches each one to a dedicated POSIX thread which allows concurrency without any blocking.
 
-## Code Explained
+## Implementation Details
 
 It begins by setting up a signal handler and using a create() function that creates a TCP socket and sockaddr to bind to and listen on. Main enters a while running loop. If SIGINT is received, the loop does not continue, it closes its socket and closes. In the loop it continuously accepts connections, if no file desciptor is returned (no connection), then it just continues on to the next iteration of the loop. If a client indeed connects, then the client file descriptor is returned by accept() and the loop creates a detached POSIX thread to handle the new client.
 

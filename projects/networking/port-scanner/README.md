@@ -4,7 +4,7 @@ This is a modular SYN (half-open) port scanner with multithreading and raw packe
 
 It takes three arguments: IP, start_port (1-65535), end_port (1-65535)
 
-## Architecture
+## Implementation Details
 
 The program begins with argument parsing and argument validation, then retrieving the local IP - which involves using a temporary udp socket (data is never sent) - for the future packet construction. It puts all important vars into a config that later gets passed around through a pointer. 
 
