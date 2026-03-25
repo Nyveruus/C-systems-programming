@@ -174,6 +174,7 @@ void build_http(char *file, char *extension, char *response, size_t *response_le
         free(header);
         return;
     }
+    //note: snprintf null terminates automatically, strlen can be used
     snprintf(header, BUFFER_SIZE, "HTTP/1.1 200 OK\r\nContent-Type: %s\r\n\r\n", mime_type);
 
     *response_len = 0;
