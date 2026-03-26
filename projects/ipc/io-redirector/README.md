@@ -1,7 +1,5 @@
 # I/O Redirector
 
-## What it does
-
 This program displays how I/O redirection fundamentally works in C by mimicking basic shell redirection operators
 
 - \> overwrite output redirection

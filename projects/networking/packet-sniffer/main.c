@@ -53,6 +53,7 @@ int main(int argc, char *argv[]) {
     }
 
     signal(SIGINT, signal_handler);
+    signal(SIGTERM, signal_handler);
 
     int socket_fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
     if (socket_fd < 0) {

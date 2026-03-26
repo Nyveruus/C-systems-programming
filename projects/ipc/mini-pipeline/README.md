@@ -1,7 +1,5 @@
 # Mini pipeline
 
-## What it does
-
 A minimal demonstration of Unix process piping in C, showing how two commandscan be connected via a pipe by redirecting file descriptors with dup2
 
 ## Build & run
