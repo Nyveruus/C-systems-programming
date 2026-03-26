@@ -38,5 +38,6 @@ echo "Enabling and starting service"
 systemctl daemon-reload
 systemctl enable --now pcapsniffer.service
 
-echo "Done"
-echo "Use /var/lib/pcap-sniffer/captures.pcap"
+echo -e "Done\n"
+echo "Copy capture from remote machine: scp user@host:/var/lib/pcap-sniffer/captures.pcap ./captures.pcap"
+echo "View: tcpdump -r captures.pcap  or  wireshark captures.pcap"
