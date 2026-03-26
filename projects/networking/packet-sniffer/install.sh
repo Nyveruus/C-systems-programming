@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 
 if [[ $EUID -ne 0 ]]; then
     echo "Root required"
@@ -27,6 +26,7 @@ ExecStart=/usr/local/bin/pcapsnifferd
 Restart=on-failure
 User=pcapsnifferd
 StateDirectory=pcap-sniffer
+WorkingDirectory=/var/lib/pcap-sniffer
 AmbientCapabilities=CAP_NET_RAW CAP_NET_ADMIN
 CapabilityBoundingSet=CAP_NET_RAW CAP_NET_ADMIN
 

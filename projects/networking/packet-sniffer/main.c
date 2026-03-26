@@ -47,10 +47,6 @@ void signal_handler(int sig) {
 }
 
 int main(int argc, char *argv[]) {
-    if (geteuid() != 0) {
-        fprintf(stderr, "Must run as root\n");
-        return 1;
-    }
 
     signal(SIGINT, signal_handler);
     signal(SIGTERM, signal_handler);
