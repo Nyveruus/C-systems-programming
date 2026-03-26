@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
             close(socket_fd);
             return 1;
         }
-        for (intf = ifnidxs; intf->if_index != 0 || intf->if_name != NULL; intf++) {
+        for (intf = ifnidxs; intf->if_index != 0 && intf->if_name != NULL; intf++) {
             if (strcmp(intf->if_name, "lo") == 0) continue;
             set_promisc(intf->if_name, socket_fd);
         }
