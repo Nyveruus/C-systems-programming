@@ -81,7 +81,7 @@ int main(int argc, char *argv[]) {
         if_freenameindex(ifnidxs);
     }
     //open .pcap file wb
-    FILE *file = fopen("captures/file.pcap", "wb");
+    FILE *file = fopen("captures.pcap", "wb");
     if (!file) {
         perror("fopen");
         goto cleanup;
@@ -106,7 +106,7 @@ int main(int argc, char *argv[]) {
         //while running: if time elapsed over X hours, overwrite file (close and open) and rebuild headers
         if (time(NULL) - start_time >= TIME_ROTATION) {
             fclose(file);
-            file = fopen("captures/file.pcap", "wb");
+            file = fopen("captures.pcap", "wb");
             if (!file) {
                 perror("fopen");
                 goto cleanup;
