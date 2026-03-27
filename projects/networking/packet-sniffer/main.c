@@ -102,6 +102,7 @@ int main(int argc, char *argv[]) {
         //while running: if time elapsed over X hours, overwrite file (close and open) and rebuild headers
         if (time(NULL) - start_time >= TIME_ROTATION) {
             fclose(file);
+            file = NULL;
             file = fopen("captures.pcap", "wb");
             if (!file) {
                 perror("fopen");
