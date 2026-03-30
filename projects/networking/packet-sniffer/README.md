@@ -34,7 +34,7 @@ Every iteration of the main loop checks if 2 hours have elapsed, if true, then t
 
 Every received frame from recvfrom is checked against the interface filter using if_indextoname, argv, and a for loop. Every matching frame is written and flushed to the disk
 
-**Shutdown and Cleanup**
+**Shutdown & Cleanup**
 
 Upon SIGTERM or SIGINT, keep_running is set to 0 and the main loop terminates. Interfaces are restored to non-promiscuous mode, socket is closed, and all allocated memory is freed.
 
@@ -52,8 +52,27 @@ $ sudo ./install.sh
 $ systemctl enable --now pcapsniffer.service
 ```
 
+### Retrieval
+
+Pull the capture file from the remote host with scp:
+```
+$ scp user@host:/var/lib/pcap-sniffer/file.pcap
+$ ./capture.pcap
+
+```
+Open in tcpdump or Wireshark:
+```
+$ tcpdump -r capture.pcap
+$ wireshark capture.pcap
+```
+
 ## Uninstallation
 
 ```
 $ sudo ./uninstall.sh
 ```
+
+## Note:
+
+- The rolling overwrite means only the most recent 2 hour window is kept on disk. Pull the file before rotation if longer retention is needed.
+- Packet loss is possible under high traffic load since no kernel ring buffer is used.
