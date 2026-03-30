@@ -34,10 +34,9 @@ CapabilityBoundingSet=CAP_NET_RAW CAP_NET_ADMIN
 WantedBy=multi-user.target
 EOF
 
-echo "Enabling and starting service"
 systemctl daemon-reload
-systemctl enable --now pcapsniffer.service
+#systemctl enable --now pcapsniffer.service
 
 echo -e "Done\n"
-echo "Copy capture from remote machine: scp user@host:/var/lib/pcap-sniffer/captures.pcap ./captures.pcap"
-echo "View: tcpdump -r captures.pcap  or  wireshark captures.pcap"
+echo "Enable and start service: $ systemctl enable --now pcapsniffer.service"
+echo "File: /var/lib/pcap-sniffer/captures.pcap"
