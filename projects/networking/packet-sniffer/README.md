@@ -57,8 +57,6 @@ $ systemctl enable --now pcapsniffer.service
 Pull the capture file from the remote host with scp:
 ```
 $ scp user@host:/var/lib/pcap-sniffer/file.pcap
-$ ./capture.pcap
-
 ```
 Open in tcpdump or Wireshark:
 ```
