@@ -3,7 +3,7 @@ initialize (config steps) PATH?,
 interpret (read from stdin and interpret): loop of shell
 terminate (execute any shutdown commands, free memory...)
 
-loop of shell: read, parse, execute
+loop of interpret: read, parse, execute
 
 read:
 use getchar to save stdin to heap buffer, every iteration check if next iteration excees buffer, if, then reallocate more space
@@ -16,7 +16,55 @@ challenges: implement piping and redirection, globbing, and quoting
 
 */
 #include <stdio.h>
+#include <stdlib.h>
+
+#define BUFFER_SIZE 1024
+
+void interpret(void);
+char *readline(void);
 
 int main(int argc, char *argv[]) {
+    interpret();
+}
 
+void interpret(void) {
+    //read, parse (tokenize and arguments), execute
+    char *line;
+    while (running) {
+        printf("> ");
+        line = readline();
+    }
+}
+
+char *readline(void) {
+    int buffer_size = BUFFER_SIZE;
+    char *buffer = malloc(BUFFER_SIZE);
+    if (!buffer) {
+        perror("malloc");
+        exit(1);
+    }
+    int position = 0;
+    int c;
+
+    //read stdin in getc loop until EOF or new line. If next position exceeds buffer, then realloc.
+
+    for (;;) {
+        c = getchar();
+
+        if (c == EOF || c == '\n') {
+            buffer[position] = '\0';
+            return buffer;
+        } else {
+            buffer[position++] = c;
+        }
+
+        if (position >= buffer_size) {
+            buffer_size += BUFFER_SIZE;
+            realloc(buffer, buffer_size);
+            if (!buffer) {
+                perror("realloc");
+                exit(1);
+            }
+        }
+    }
 }
