@@ -16,6 +16,7 @@
 
 #define MAX_IF 32
 #define TIME_ROTATION 7200
+#define MAX_LEN 65535
 
 struct __attribute__((packed)) pcap_header {
     uint32_t magic_number;
@@ -89,13 +90,13 @@ int main(int argc, char *argv[]) {
         .version_minor = 4,
         .reserved1 = 0,
         .reserved2 = 0,
-        .snaplen = 65535,
+        .snaplen = MAX_LEN,
         .link_type = 1
     };
     fwrite(&phdr, sizeof(phdr), 1, file);
 
     //while running: recvfrom, function: check if from right interface (filter for default or user arg interfaces) write to .pcap
-    unsigned char buffer[65536];
+    unsigned char buffer[MAX_LEN + 1];
     time_t start_time = time(NULL);
 
     while (keep_running) {
@@ -119,7 +120,9 @@ int main(int argc, char *argv[]) {
             if (keep_running)
                 perror("recvfrom");
             break;
-        } else if (len == 0 || len > 65535) continue;
+        }
+
+        if (len == 0 || len > MAX_LEN) continue;
 
         char ifname[IFNAMSIZ];
         if_indextoname(src_addr.sll_ifindex, ifname);
