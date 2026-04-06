@@ -76,6 +76,7 @@ char *readline(void) {
     }
 }
 
+//strtok returns pointer to token one at a time. To use strtok subsequent times on single char string, use NULL as arg. When no more args left, returns NULL
 char **tokenize(char *line) {
     int buffer_size = STRTOK_BUF;
     int position = 0;
