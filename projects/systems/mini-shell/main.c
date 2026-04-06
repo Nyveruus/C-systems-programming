@@ -18,10 +18,15 @@ challenges: implement piping and redirection, globbing, and quoting
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <string.h>
+
 #define BUFFER_SIZE 1024
+#define STRTOK_BUF 64
+#define STRTOK_DELIM " \t\r\n"
 
 void interpret(void);
 char *readline(void);
+
 
 int main(int argc, char *argv[]) {
     interpret();
@@ -30,9 +35,11 @@ int main(int argc, char *argv[]) {
 void interpret(void) {
     //read, parse (tokenize and arguments), execute
     char *line;
+    char **args;
     while (running) {
         printf("> ");
         line = readline();
+        args = tokenize(line);
     }
 }
 
@@ -67,4 +74,30 @@ char *readline(void) {
             }
         }
     }
+}
+
+char **tokenize(char *line) {
+    int buffer_size = STRTOK_BUF;
+    int position = 0;
+    char **tokens = malloc(BUFFER_SIZE);
+    if (!tokents) {
+        perror("Malloc");
+        exit(1);
+    }
+
+    char *token = strtok(line, STRTOK_DELIM);
+    while (token != NULL) {
+        tokens[position++] = token;
+        if (position >= buffer_size) {
+            buffer_size += STRTOK_BUF;
+            tokens = realloc(tokens, buffer_size);
+            if (!tokens) {
+                perror("realloc");
+                exit(1);
+            }
+        }
+        token = strtok(NULL, STRTOK_DELIM);
+    }
+    tokens[position] = NULL;
+    return tokens;
 }
