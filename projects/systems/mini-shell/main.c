@@ -17,8 +17,8 @@ challenges: implement piping and redirection, globbing, and quoting
 */
 #include <stdio.h>
 #include <stdlib.h>
-
 #include <string.h>
+#include <sys/wait.h>
 
 #define BUFFER_SIZE 1024
 #define STRTOK_BUF 64
@@ -26,6 +26,8 @@ challenges: implement piping and redirection, globbing, and quoting
 
 void interpret(void);
 char *readline(void);
+char **tokenize(char *line);
+int execute(char **args);
 
 
 int main(int argc, char *argv[]) {
@@ -34,13 +36,15 @@ int main(int argc, char *argv[]) {
 
 void interpret(void) {
     //read, parse (tokenize and arguments), execute
-    char *line;
-    char **args;
-    while (running) {
+    do {
         printf("> ");
-        line = readline();
-        args = tokenize(line);
-    }
+        char *line = readline();
+        char **args = tokenize(line);
+        int status = execute(args);
+
+        free(line);
+        free(args);
+    } while (status);
 }
 
 char *readline(void) {
@@ -67,7 +71,7 @@ char *readline(void) {
 
         if (position >= buffer_size) {
             buffer_size += BUFFER_SIZE;
-            realloc(buffer, buffer_size);
+            buffer = realloc(buffer, buffer_size);
             if (!buffer) {
                 perror("realloc");
                 exit(1);
@@ -80,8 +84,8 @@ char *readline(void) {
 char **tokenize(char *line) {
     int buffer_size = STRTOK_BUF;
     int position = 0;
-    char **tokens = malloc(BUFFER_SIZE);
-    if (!tokents) {
+    char **tokens = malloc(STRTOK_BUF);
+    if (!tokens) {
         perror("Malloc");
         exit(1);
     }
@@ -101,4 +105,22 @@ char **tokenize(char *line) {
     }
     tokens[position] = NULL;
     return tokens;
+}
+
+//fork and exec
+int execute(char **args) {
+    int status;
+    pid_t pid = fork();
+    if (pid == 0) {
+        if (execvp(args[0], args) == -1) perror("execvp");
+        exit(1);
+    } else if (pid < 0) {
+        perror("fork");
+    } else {
+        do {
+            waitpid(pid, &status, WUNTRACED);
+        } while (!WIFEXITED(status) && !WIFSIGNALED(status));
+        //while status doesnt return true on exiting normally and doesnt return true on signal termination
+    }
+    return 1;
 }
