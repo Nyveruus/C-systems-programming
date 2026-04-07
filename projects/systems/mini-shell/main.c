@@ -14,6 +14,9 @@ have declared built ins. check if token is built in or program. start processes,
 
 challenges: implement piping and redirection, globbing, and quoting
 
+heavy inspiration from Stephen Brennan's Write a Shell in C
+
+PATH is inherited from parent login shell, which is downstream of sh script /etc/profile
 */
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,8 +30,8 @@ challenges: implement piping and redirection, globbing, and quoting
 void interpret(void);
 char *readline(void);
 char **tokenize(char *line);
+int bin_exec(char **args);
 int execute(char **args);
-
 
 int main(int argc, char *argv[]) {
     interpret();
@@ -108,7 +111,7 @@ char **tokenize(char *line) {
 }
 
 //fork and exec
-int execute(char **args) {
+int bin_exec(char **args) {
     int status;
     pid_t pid = fork();
     if (pid == 0) {
@@ -123,4 +126,8 @@ int execute(char **args) {
         //while status doesnt return true on exiting normally and doesnt return true on signal termination
     }
     return 1;
+}
+
+int execute(char **args) {
+
 }
