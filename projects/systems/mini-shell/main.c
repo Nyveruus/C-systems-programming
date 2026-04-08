@@ -150,13 +150,25 @@ int execute(char **args) {
 }
 
 int builtin_cd(char **args) {
-
+    if (!argv[1]) {
+        fprintf("No argument");
+    } else {
+        if (chdir(args[1]) != 0) {
+            perror("chdir");
+        }
+    }
+    return 1;
 }
 
 int builtin_help(char **args) {
-
+    printf("Built in commands:\n");
+    for (int i = 0, size = sizeof(builtin)/sizeof(builtin[1]); i < size; i++) {
+        printf("    %s\n", builtin[i]);
+    }
+    return 1;
 }
 
 int builtin_exit(char **args) {
-
+    (void)args;
+    return 0;
 }
