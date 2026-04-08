@@ -1,2 +1,4 @@
 *.pcap
 main
+client
+server
