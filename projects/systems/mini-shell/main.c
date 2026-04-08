@@ -1,4 +1,6 @@
 /*
+ heavy inspiration from Stephen Brennan's Write a Shell in C
+
 initialize (config steps) PATH?,
 interpret (read from stdin and interpret): loop of shell
 terminate (execute any shutdown commands, free memory...)
@@ -13,8 +15,6 @@ execute:
 have declared built ins. check if token is built in or program. start processes, fork, exec, waipid... IPC. If built in, execute
 
 challenges: implement piping and redirection, globbing, and quoting
-
-heavy inspiration from Stephen Brennan's Write a Shell in C
 
 PATH is inherited from parent login shell, which is downstream of sh script /etc/profile
 */
@@ -32,6 +32,23 @@ char *readline(void);
 char **tokenize(char *line);
 int bin_exec(char **args);
 int execute(char **args);
+int builtin_cd(char **args)
+int builtin_help(char **args)
+int builtin_exit(char **args)
+
+//array of commands
+char *builtin[] = {
+    "cd",
+    "help",
+    "exit"
+};
+
+//array of function pointers that return int and take pointer to char pointers (args/tokens)
+int (*builtin_func[])(char **) = {
+    &builtin_cd,
+    &builtin_help,
+    &builtin_exit
+};
 
 int main(int argc, char *argv[]) {
     interpret();
@@ -129,5 +146,17 @@ int bin_exec(char **args) {
 }
 
 int execute(char **args) {
+
+}
+
+int builtin_cd(char **args) {
+
+}
+
+int builtin_help(char **args) {
+
+}
+
+int builtin_exit(char **args) {
 
 }

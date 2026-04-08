@@ -1,14 +1,12 @@
 # I/O Redirector
 
-This program displays how I/O redirection fundamentally works in C by mimicking basic shell redirection operators
+How I/O redirection fundamentally and basic shell redirection operators
 
 - \> overwrite output redirection
 - \>\> append output redirection
 - \< input redirection
 
 Heredoc << is not covered
-
-It uses core Unix system calls: fork, open, dup2, and execl
 
 ## Build & run
 
