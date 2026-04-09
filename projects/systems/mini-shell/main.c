@@ -23,6 +23,7 @@ PATH is inherited from parent login shell, which is downstream of sh script /etc
 #include <string.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <errno.h>
 
 #define BUFFER_SIZE 1024
 #define STRTOK_BUF 64
@@ -33,22 +34,26 @@ char *readline(void);
 char **tokenize(char *line);
 int bin_exec(char **args);
 int execute(char **args);
+
 int builtin_cd(char **args);
 int builtin_help(char **args);
 int builtin_exit(char **args);
+int builtin_pwd(char **args);
 
 //array of commands
 char *builtin[] = {
     "cd",
     "help",
-    "exit"
+    "exit",
+    "pwd"
 };
 
 //array of function pointers that return int and take pointer to char pointers (args/tokens)
 int (*builtin_func[])(char **) = {
     &builtin_cd,
     &builtin_help,
-    &builtin_exit
+    &builtin_exit,
+    &builtin_pwd
 };
 
 int main(void) {
@@ -185,3 +190,30 @@ int builtin_exit(char **args) {
     return 0;
 }
 
+int builtin_pwd(char **args) {
+    (void)args;
+    int size = BUFFER_SIZE;
+    char *buffer = malloc(size);
+    if (!buffer) {
+        perror("Malloc");
+        exit(1);
+    }
+
+    if (getcwd(buffer, size) == NULL && errno == ERANGE) {
+        do {
+            size += BUFFER_SIZE;
+            buffer = realloc(buffer, size);
+            if (!buffer) {
+                perror("realloc");
+                exit(1);
+            }
+            if (getcwd(buffer, size) == NULL && errno != ERANGE){
+                perror("getcwd");
+                exit(1);
+            }
+        } while (errno == ERANGE);
+    }
+    printf("%s\n", buffer);
+    free(buffer);
+    return 1;
+}
