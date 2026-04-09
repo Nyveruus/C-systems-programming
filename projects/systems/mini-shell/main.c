@@ -146,7 +146,15 @@ int bin_exec(char **args) {
 }
 
 int execute(char **args) {
-
+    if (!args[0]) {
+        return 1;
+    }
+    for (int i = 0, num = sizeof(builtin)/sizeof(builtin[0]); i < num; i++) {
+        if (strcmp(args[0], builtin[i]) == 0) {
+            return (*builtin_func[i])(args);
+            //call function pointer (dereference) and return result. Status is set to 0 and do while loop terminates
+        }
+    }
 }
 
 int builtin_cd(char **args) {
