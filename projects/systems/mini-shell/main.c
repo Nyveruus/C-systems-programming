@@ -155,6 +155,7 @@ int execute(char **args) {
             //call function pointer (dereference) and return result. Status is set to 0 and do while loop terminates
         }
     }
+
 }
 
 int builtin_cd(char **args) {
