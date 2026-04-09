@@ -14,7 +14,7 @@ tokenize the string by using white space as delimiter into different arguments, 
 execute:
 have declared built ins. check if token is built in or program. start processes, fork, exec, waipid... IPC. If built in, execute
 
-challenges: implement piping and redirection, globbing, and quoting
+challenges: quoting, IPC, signal handling
 
 PATH is inherited from parent login shell, which is downstream of sh script /etc/profile
 */
@@ -67,6 +67,7 @@ void interpret(void) {
         printf("> ");
         char *line = readline();
         char **args = tokenize(line);
+        //TODO parsing to handle ipc
         status = execute(args);
 
         free(line);
@@ -109,6 +110,7 @@ char *readline(void) {
 
 //strtok returns pointer to token one at a time. To use strtok subsequent times on single char string, use NULL as arg. When no more args left, returns NULL
 char **tokenize(char *line) {
+    //TODO quoting
     int buffer_size = STRTOK_BUF;
     int position = 0;
     char **tokens = malloc(STRTOK_BUF);
