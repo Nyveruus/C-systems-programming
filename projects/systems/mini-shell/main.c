@@ -22,6 +22,7 @@ PATH is inherited from parent login shell, which is downstream of sh script /etc
 #include <stdlib.h>
 #include <string.h>
 #include <sys/wait.h>
+#include <unistd.h>
 
 #define BUFFER_SIZE 1024
 #define STRTOK_BUF 64
@@ -32,9 +33,9 @@ char *readline(void);
 char **tokenize(char *line);
 int bin_exec(char **args);
 int execute(char **args);
-int builtin_cd(char **args)
-int builtin_help(char **args)
-int builtin_exit(char **args)
+int builtin_cd(char **args);
+int builtin_help(char **args);
+int builtin_exit(char **args);
 
 //array of commands
 char *builtin[] = {
@@ -50,17 +51,18 @@ int (*builtin_func[])(char **) = {
     &builtin_exit
 };
 
-int main(int argc, char *argv[]) {
+int main(void) {
     interpret();
 }
 
 void interpret(void) {
     //read, parse (tokenize and arguments), execute
+    int status = 1;
     do {
         printf("> ");
         char *line = readline();
         char **args = tokenize(line);
-        int status = execute(args);
+        status = execute(args);
 
         free(line);
         free(args);
@@ -159,8 +161,8 @@ int execute(char **args) {
 }
 
 int builtin_cd(char **args) {
-    if (!argv[1]) {
-        fprintf("No argument");
+    if (!args[1]) {
+        fprintf(stderr, "No argument\n");
     } else {
         if (chdir(args[1]) != 0) {
             perror("chdir");
@@ -170,6 +172,7 @@ int builtin_cd(char **args) {
 }
 
 int builtin_help(char **args) {
+    (void)args;
     printf("Built in commands:\n");
     for (int i = 0, size = sizeof(builtin)/sizeof(builtin[1]); i < size; i++) {
         printf("    %s\n", builtin[i]);
@@ -181,3 +184,4 @@ int builtin_exit(char **args) {
     (void)args;
     return 0;
 }
+
