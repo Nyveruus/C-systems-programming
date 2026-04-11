@@ -145,6 +145,7 @@ int bin_exec(char **args) {
     int status;
     pid_t pid = fork();
     if (pid == 0) {
+        //restore signal handling
         signal(SIGINT, SIG_DFL);
         signal(SIGQUIT, SIG_DFL);
         if (execvp(args[0], args) == -1) perror("execvp");
@@ -155,6 +156,9 @@ int bin_exec(char **args) {
         do {
             waitpid(pid, &status, WUNTRACED);
         } while (!WIFEXITED(status) && !WIFSIGNALED(status));
+        if (WIFSIGNALED(status)) {
+            write(STDOUT_FILENO, "\n", 1);
+        }
         //while status doesnt return true on exiting normally and doesnt return true on signal termination
     }
     return 1;
