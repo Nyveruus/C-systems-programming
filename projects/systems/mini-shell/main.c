@@ -24,6 +24,7 @@ PATH is inherited from parent login shell, which is downstream of sh script /etc
 #include <sys/wait.h>
 #include <unistd.h>
 #include <errno.h>
+#include <signal.h>
 
 #define BUFFER_SIZE 1024
 #define STRTOK_BUF 64
@@ -62,6 +63,9 @@ int main(void) {
 
 void interpret(void) {
     //read, parse (tokenize and arguments), execute
+    signal(SIGINT, SIG_IGN);
+    signal(SIGQUIT, SIG_IGN);
+
     int status = 1;
     do {
         printf("> ");
@@ -141,6 +145,8 @@ int bin_exec(char **args) {
     int status;
     pid_t pid = fork();
     if (pid == 0) {
+        signal(SIGINT, SIG_DFL);
+        signal(SIGQUIT, SIG_DFL);
         if (execvp(args[0], args) == -1) perror("execvp");
         exit(1);
     } else if (pid < 0) {
