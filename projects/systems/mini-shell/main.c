@@ -14,7 +14,7 @@ tokenize the string by using white space as delimiter into different arguments, 
 execute:
 have declared built ins. check if token is built in or program. start processes, fork, exec, waipid... IPC. If built in, execute
 
-challenges: quoting, IPC, signal handling
+challenges: quoting, IPC
 
 PATH is inherited from parent login shell, which is downstream of sh script /etc/profile
 */
@@ -30,11 +30,19 @@ PATH is inherited from parent login shell, which is downstream of sh script /etc
 #define STRTOK_BUF 64
 #define STRTOK_DELIM " \t\r\n"
 
+typedef struct {
+    char **tokens;
+    char *in;
+    char *out;
+    int append;
+} segment;
+
 void interpret(void);
 char *readline(void);
 char **tokenize(char *line);
 int bin_exec(char **args);
 int execute(char **args);
+segment *parse(char **tokens);
 
 int builtin_cd(char **args);
 int builtin_help(char **args);
@@ -71,7 +79,8 @@ void interpret(void) {
         printf("> ");
         char *line = readline();
         char **args = tokenize(line);
-        //TODO parsing to handle ipc
+        segment *segs = parse(args);
+
         status = execute(args);
 
         free(line);
@@ -228,4 +237,8 @@ int builtin_pwd(char **args) {
     printf("%s\n", buffer);
     free(buffer);
     return 1;
+}
+
+segment *parse(char **tokens) {
+
 }
