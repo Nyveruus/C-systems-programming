@@ -42,7 +42,7 @@ char *readline(void);
 char **tokenize(char *line);
 int bin_exec(char **args);
 int execute(char **args);
-segment *parse(char **tokens);
+segment *parse(char **tokens, int *num_segs);
 
 int builtin_cd(char **args);
 int builtin_help(char **args);
@@ -79,7 +79,8 @@ void interpret(void) {
         printf("> ");
         char *line = readline();
         char **args = tokenize(line);
-        segment *segs = parse(args);
+        int num_segs = 1;
+        segment *segs = parse(args, &num_segs);
 
         status = execute(args);
 
@@ -239,6 +240,10 @@ int builtin_pwd(char **args) {
     return 1;
 }
 
-segment *parse(char **tokens) {
+segment *parse(char **tokens, int *num_segs) {
+    for (int i = 0; tokens[i] != NULL; i++) {
+        if (strcmp(tokens[i], "|") == 0) (*num_segs)++;
+    }
+    segment *segs = malloc(sizeof(segment) * (*num_segs));
 
 }
