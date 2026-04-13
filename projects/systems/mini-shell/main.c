@@ -30,19 +30,11 @@ PATH is inherited from parent login shell, which is downstream of sh script /etc
 #define STRTOK_BUF 64
 #define STRTOK_DELIM " \t\r\n"
 
-typedef struct {
-    char **tokens;
-    char *in;
-    char *out;
-    int append;
-} segment;
-
 void interpret(void);
 char *readline(void);
 char **tokenize(char *line);
 int bin_exec(char **args);
 int execute(char **args);
-segment *parse(char **tokens, int *num_segs);
 
 int builtin_cd(char **args);
 int builtin_help(char **args);
@@ -79,8 +71,6 @@ void interpret(void) {
         printf("> ");
         char *line = readline();
         char **args = tokenize(line);
-        int num_segs = 1;
-        segment *segs = parse(args, &num_segs);
 
         status = execute(args);
 
@@ -238,12 +228,4 @@ int builtin_pwd(char **args) {
     printf("%s\n", buffer);
     free(buffer);
     return 1;
-}
-
-segment *parse(char **tokens, int *num_segs) {
-    for (int i = 0; tokens[i] != NULL; i++) {
-        if (strcmp(tokens[i], "|") == 0) (*num_segs)++;
-    }
-    segment *segs = malloc(sizeof(segment) * (*num_segs));
-
 }
