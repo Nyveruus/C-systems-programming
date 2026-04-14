@@ -13,7 +13,9 @@ All processes in Unix are ultimately done through forking the parent processes a
 
 The next and final basic step is execution. The first thing to do is to check if the command is a built in like cd, help, pwd, exit... or if it's seperate binary. strcmp() is used for checking and returns a the result of a dereferenced and indexed function pointer if it's a built in, otherwise a seperate function for executing binaries is called with the tokens as an argument. The reason we need to differentiate between built ins and independent binaries is because for certain taks like cd or exit, the parent itself needs to be modified otherwise the child would spawn, execute, and then do nothing to actually change the parent
 
--
+Basic signal handling should prevent the shell being closed on SIGINT and SIGQUIT, and only affect child processes. To do this signals are caught with SIG_IGN in the main shell and child processes restore basic signal handling for themselves with SIG_DFL
+
+\-
 
 For implementing features like piping and features like IO redirection, further processing must be done on the tokens. Some design choices would be to use structs or alternatively an array of arrays of char arrays (char ***) to differentiate "segments", segments would be delimited by pipes. In the case of using a struct, in, out and the append option can be tracked for IO redirection for each segment, piping can be handled during the execution phase, by checking the number of "segments" and creating a pipe between them.
 
