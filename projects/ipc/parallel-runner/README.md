@@ -1,7 +1,7 @@
 # Parallel Runner
 
-Runs up to 10 shell commands in parallel and prints their output in completion
-order — fastest commands print first, regardless of argument order.
+Runs 10 shell commands in parallel and prints their output in completion
+order, fastest commands print first, regardless of argument order.
 
 ## Build & run
 

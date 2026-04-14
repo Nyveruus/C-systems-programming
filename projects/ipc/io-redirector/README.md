@@ -1,12 +1,9 @@
 # I/O Redirector
 
-How I/O redirection fundamentally and basic shell redirection operators
-
-- \> overwrite output redirection
-- \>\> append output redirection
-- \< input redirection
-
+How IO redirection fundamentally works and mimics basic shell redirection operators: \>, \>\>, \<
 Heredoc << is not covered
+
+
 
 ## Build & run
 

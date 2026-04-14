@@ -1,7 +1,7 @@
 /*
  heavy inspiration from Stephen Brennan's Write a Shell in C
 
-initialize (config steps) PATH?,
+initialize (config steps)
 interpret (read from stdin and interpret): loop of shell
 terminate (execute any shutdown commands, free memory...)
 
@@ -114,7 +114,6 @@ char *readline(void) {
 
 //strtok returns pointer to token one at a time. To use strtok subsequent times on single char string, use NULL as arg. When no more args left, returns NULL
 char **tokenize(char *line) {
-    //TODO quoting
     int buffer_size = STRTOK_BUF;
     int position = 0;
     char **tokens = malloc(STRTOK_BUF);

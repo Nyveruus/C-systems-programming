@@ -1,6 +1,6 @@
 # Mini pipeline
 
-A minimal demonstration of Unix process piping in C, showing how two commandscan be connected via a pipe by redirecting file descriptors with dup2
+Unix piping in C. How two commands can be connected via a pipe by redirecting file descriptors with dup2
 
 ## Build & run
 
