@@ -1,6 +1,7 @@
 # Mini shell
-This is a learning project to understand how shells work based on Stephen Brennan's tutorial, 
-extended with signal handling and pwd.
+This is a learning project to understand how shells work based on Stephen Brennan's tutorial, extended with signal handling and pwd.
+
+All built-ins: cd, pwd, exit, help 
 
 ## How Shells Work
 
@@ -18,4 +19,11 @@ Basic signal handling should prevent the shell being closed on SIGINT and SIGQUI
 \-
 
 For implementing features like piping and features like IO redirection, further processing must be done on the tokens. Some design choices would be to use structs or alternatively an array of arrays of char arrays (char ***) to differentiate "segments", segments would be delimited by pipes. In the case of using a struct, in, out and the append option can be tracked for IO redirection for each segment, piping can be handled during the execution phase, by checking the number of "segments" and creating a pipe between them.
+
+## Build and Run
+
+```
+$ gcc main.c -o main
+$ ./main
+```
 
