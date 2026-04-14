@@ -4,7 +4,6 @@ How IO redirection fundamentally works and mimics basic shell redirection operat
 Heredoc << is not covered
 
 
-
 ## Build & run
 
 ```
