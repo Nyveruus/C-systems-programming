@@ -4,3 +4,5 @@ client
 server
 portscanner
 *kate-swp
+*.pem
+*.csr
