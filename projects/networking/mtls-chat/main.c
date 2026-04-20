@@ -7,13 +7,13 @@
 #include "server.h"
 
 void usage(void) {
-    fprintf(stderr, "Usage: ./mtlsapp server [PORT] [CA] [CERT] [KEY]\n");
+    fprintf(stderr, "Usage: ./mtlsapp server [IP] [PORT] [CA] [CERT] [KEY]\n");
     return;
 }
 
-int select_function(int argc, char **argv) {
+int select_function(char **argv) {
     if (!strcmp(argv[1], "server"))
-        return server(atoi(argv[2]), argv[3], argv[4], argv[5]);
+        return server(atoi(argv[2]), argv[3], argv[4], argv[5], argv[6]);
     else if (!strcmp(argv[1], "client"))
         return 1; //TODO client function
     else
@@ -21,10 +21,10 @@ int select_function(int argc, char **argv) {
 }
 
 int main(int argc, char *argv[]) {
-    if (argc != 6) {
+    if (argc != 7) {
         usage();
         return 1;
     }
-    select_function(argc, argv);
+    select_function(argv);
 }
 
