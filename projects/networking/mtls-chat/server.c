@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <openssl/ssl.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -17,11 +18,10 @@
 
 void setup_object(SSL_CTX **ctx);
 void setup_tcp(int *socket_fd, char *ip, int port);
-int poll_loop(int socket_fd, char *ca, char *cert, char *key);
+void poll_loop(int socket_fd, char *ca, char *cert, char *key);
 
-int server(char *ip, char *port, char *ca, char *cert, char *key) {
+int server(char *ip, int port, char *ca, char *cert, char *key) {
     SSL_CTX *ctx;
-    port = atoi(port);
     int socket_fd;
 
     setup_object(&ctx);
@@ -65,10 +65,9 @@ void setup_tcp(int *socket_fd, char *ip, int port) {
     }
 }
 
-int poll_loop(int socket_fd, char *ca, char *cert, char *key) {
-    struct pollfd fds[MAX_CLIENTS + 2];
-    struct sockaddr_in peer;
-    int nfds = 2;
+void poll_loop(int socket_fd, char *ca, char *cert, char *key) {
+    struct pollfd fds[MAX_CLIENTS];
+    int number_revents, nfds = 2;
 
     fds[0].fd = socket_fd;
     fds[0].events = POLLIN;
@@ -82,5 +81,40 @@ int poll_loop(int socket_fd, char *ca, char *cert, char *key) {
         fds[i].fd = -1;
     }
 
+    for (;;) {
+        number_revents = poll(fds, nfds, TIMEOUT);
+        //accept connections
+        if (number_revents > 0 && (fds[0].revents & POLLIN)) {
+            if (tcp_accept_function(socket_fd, &fds, &nfds) != 0) {
+                perror("accept");
+                continue;
+            }
+        }
+        //read and write STDIN_FILENO
+        //read from clients
+    }
+}
 
+int tcp_accept_function(int socket_fd, struct pollfd **fds, int *nfds) {
+    int client_fd;
+    struct sockaddr_in client;
+    socklen_t addr_len = sizeof(struct sockaddr);
+
+    client_fd = accept(socket_fd, (struct sockaddr *)&client, &addr_len);
+    if (client_fd < 0)
+        return 1;
+    for (int i = 2; i <= MAX_CLIENTS)
+        if ((*fds)[i].fd == -1) {
+
+            (*fds)[i].fd = client_fd;
+            (*fds)[i].events = POLLIN;
+            (*fds)[i].revents = 0;
+
+            if (i >= *nfds)
+                //+1 because of index
+                *nfds = i + 1;
+            break;
+        }
+
+    return 0;
 }
