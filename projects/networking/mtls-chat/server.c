@@ -16,16 +16,16 @@
 #define MAX_CLIENTS 100
 #define TIMEOUT 2000
 
-void setup_context(SSL_CTX **ctx);
+void setup_context(SSL_CTX **ctx, char *ca, char *cert, char *key);
 void setup_tcp(int *socket_fd, char *ip, int port);
-void poll_loop(int socket_fd, char *ca, char *cert, char *key, SSL_CTX *ctx);
-int tcp_accept_function(int socket_fd, struct pollfd **fds, int *nfds);
+void poll_loop(int socket_fd, SSL_CTX *ctx);
+int tcp_accept_function(int socket_fd, struct pollfd *fds, int *nfds, int *client_fd, int *out_index);
 
 int server(char *ip, int port, char *ca, char *cert, char *key) {
     SSL_CTX *ctx;
     int socket_fd;
 
-    setup_context(&ctx);
+    setup_context(&ctx, ca, cert, key);
 
     setup_tcp(&socket_fd, ip, port);
 
@@ -35,13 +35,13 @@ int server(char *ip, int port, char *ca, char *cert, char *key) {
     return 0;
 }
 
-void setup_context(SSL_CTX **ctx) {
+void setup_context(SSL_CTX **ctx, char *ca, char *cert, char *key) {
     if (!(*ctx = SSL_CTX_new(TLS_server_method()))) {
         perror("SSL_CTX_new");
         exit(1);
     }
-    //mtls verify
     SSL_CTX_set_verify(*ctx, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, NULL);
+    //TODO certs, key, ca...
 }
 
 void setup_tcp(int *socket_fd, char *ip, int port) {
@@ -68,8 +68,9 @@ void setup_tcp(int *socket_fd, char *ip, int port) {
     }
 }
 
-void poll_loop(int socket_fd, char *ca, char *cert, char *key, SSL_CTX *ctx) {
+void poll_loop(int socket_fd, SSL_CTX *ctx) {
     struct pollfd fds[MAX_CLIENTS];
+    SSL *ssls[MAX_CLIENTS];
     int number_revents, nfds = 2;
 
     fds[0].fd = socket_fd;
@@ -89,8 +90,8 @@ void poll_loop(int socket_fd, char *ca, char *cert, char *key, SSL_CTX *ctx) {
         //accept connections
         if (number_revents > 0 && (fds[0].revents & POLLIN)) {
             //tcp
-            int client_fd;
-            if (tcp_accept_function(socket_fd, fds, &nfds, &client_fd) != 0)
+            int client_fd, out_index;
+            if (!tcp_accept_function(socket_fd, fds, &nfds, &client_fd, &out_index))
                 continue;
             //tls
 
@@ -100,7 +101,7 @@ void poll_loop(int socket_fd, char *ca, char *cert, char *key, SSL_CTX *ctx) {
     }
 }
 
-int tcp_accept_function(int socket_fd, struct pollfd *fds, int *nfds, int *client_fd) {
+int tcp_accept_function(int socket_fd, struct pollfd *fds, int *nfds, int *client_fd, int *out_index) {
     struct sockaddr_in client;
     socklen_t addr_len = sizeof(struct sockaddr);
 
@@ -110,7 +111,7 @@ int tcp_accept_function(int socket_fd, struct pollfd *fds, int *nfds, int *clien
         return 1;
     }
     for (int i = 2; i < MAX_CLIENTS; i++)
-        if ((*fds)[i].fd == -1) {
+        if (fds[i].fd == -1) {
 
             fds[i].fd = *client_fd;
             fds[i].events = POLLIN;
@@ -119,6 +120,7 @@ int tcp_accept_function(int socket_fd, struct pollfd *fds, int *nfds, int *clien
             if (i >= *nfds)
                 //+1 because of index
                 *nfds = i + 1;
+            *out_index = i;
             return 0;
         }
     fprintf(stderr, "max clients reached\n");
