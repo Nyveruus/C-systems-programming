@@ -20,6 +20,7 @@ void setup_context(SSL_CTX **ctx, char *ca, char *cert, char *key);
 void setup_tcp(int *socket_fd, char *ip, int port);
 void poll_loop(int socket_fd, SSL_CTX *ctx);
 int tcp_accept_function(int socket_fd, struct pollfd *fds, int *nfds, int *out_index);
+int tls_accept_function(SSL **ssls, SSL_CTX *ctx, struct pollfd *fds, int out_index);
 
 int server(char *ip, int port, char *ca, char *cert, char *key) {
     SSL_CTX *ctx;
@@ -115,10 +116,14 @@ void poll_loop(int socket_fd, SSL_CTX *ctx) {
         if (number_revents > 0 && (fds[0].revents & POLLIN)) {
             //tcp
             int out_index;
-            if (!tcp_accept_function(socket_fd, fds, &nfds, &out_index))
+            if (tcp_accept_function(socket_fd, fds, &nfds, &out_index) == 1)
                 continue;
-            //tls
-
+            //tls, if tls fails, close tcp client socket and reset poll with out_index
+            if (tls_accept_function(ssls, ctx, fds, out_index) == 1) {
+                close(fds[out_index].fd);
+                fds[out_index].fd = -1;
+                continue;
+            }
         }
         //read and write STDIN_FILENO
         //read from clients (detect disconnects and close fds, free memory)
@@ -151,4 +156,25 @@ int tcp_accept_function(int socket_fd, struct pollfd *fds, int *nfds, int *out_i
     fprintf(stderr, "max clients reached\n");
     close(client_fd);
     return 1;
+}
+
+int tls_accept_function(SSL **ssls, SSL_CTX *ctx, struct pollfd *fds, int out_index) {
+    if (!(ssls[out_index] = SSL_new(ctx))
+        return 1;
+    if (!SSL_set_fd(ssls[out_index], fds[out_index].fd)) {
+        perror("SSL_set_fd");
+        SSL_free(ssls[out_index]);
+        return 1;
+    }
+    int r;
+    if ((r = SSL_accept(ssls[out_index])) <= 0) {
+        perror("SSL_accept");
+        if (r < 0) {
+            SSL_shutdown(ssls[out_index]);
+        }
+        SSL_free(ssls[out_index]);
+        return 1;
+    }
+
+    return 0;
 }
