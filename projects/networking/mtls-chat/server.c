@@ -19,7 +19,7 @@
 void setup_context(SSL_CTX **ctx, char *ca, char *cert, char *key);
 void setup_tcp(int *socket_fd, char *ip, int port);
 void poll_loop(int socket_fd, SSL_CTX *ctx);
-int tcp_accept_function(int socket_fd, struct pollfd *fds, int *nfds, int *client_fd, int *out_index);
+int tcp_accept_function(int socket_fd, struct pollfd *fds, int *nfds, int *out_index);
 
 int server(char *ip, int port, char *ca, char *cert, char *key) {
     SSL_CTX *ctx;
@@ -40,8 +40,32 @@ void setup_context(SSL_CTX **ctx, char *ca, char *cert, char *key) {
         perror("SSL_CTX_new");
         exit(1);
     }
+
+    if (!SSL_CTX_load_verify_locations(*ctx, ca, NULL)) {
+        perror("set ca");
+        exit(1);
+    }
+    if (!SSL_CTX_set_client_CA_list(*ctx, SSL_load_client_CA_file(ca))) {
+        perror("set client ca");
+        exit(1);
+    }
+    if (!SSL_CTX_use_certificate_file(*ctx, cert, SSL_FILETYPE_PEM)) {
+        perror("set certificate");
+        exit(1);
+    }
+    if (!SSL_CTX_use_Privatekey_file(*ctx, key, SSL_FILETYPE_PEM)) {
+        perror("Private key");
+        exit(1);
+    }
+    if (!SSL_CTX_check_private_key(*ctx)) {
+        perror("Private key and certificate don't match");
+        exit(1);
+    }
+
     SSL_CTX_set_verify(*ctx, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, NULL);
-    //TODO certs, key, ca...
+    SSL_CTX_set_verify_depth(*ctx, 1);
+
+    return;
 }
 
 void setup_tcp(int *socket_fd, char *ip, int port) {
@@ -90,8 +114,8 @@ void poll_loop(int socket_fd, SSL_CTX *ctx) {
         //accept connections
         if (number_revents > 0 && (fds[0].revents & POLLIN)) {
             //tcp
-            int client_fd, out_index;
-            if (!tcp_accept_function(socket_fd, fds, &nfds, &client_fd, &out_index))
+            int out_index;
+            if (!tcp_accept_function(socket_fd, fds, &nfds, &out_index))
                 continue;
             //tls
 
@@ -101,19 +125,20 @@ void poll_loop(int socket_fd, SSL_CTX *ctx) {
     }
 }
 
-int tcp_accept_function(int socket_fd, struct pollfd *fds, int *nfds, int *client_fd, int *out_index) {
+int tcp_accept_function(int socket_fd, struct pollfd *fds, int *nfds, int *out_index) {
     struct sockaddr_in client;
     socklen_t addr_len = sizeof(struct sockaddr);
+    int client_fd;
 
-    *client_fd = accept(socket_fd, (struct sockaddr *)&client, &addr_len);
-    if (*client_fd < 0) {
+    client_fd = accept(socket_fd, (struct sockaddr *)&client, &addr_len);
+    if (client_fd < 0) {
         perror("accept");
         return 1;
     }
     for (int i = 2; i < MAX_CLIENTS; i++)
         if (fds[i].fd == -1) {
 
-            fds[i].fd = *client_fd;
+            fds[i].fd = client_fd;
             fds[i].events = POLLIN;
             fds[i].revents = 0;
 
@@ -124,6 +149,6 @@ int tcp_accept_function(int socket_fd, struct pollfd *fds, int *nfds, int *clien
             return 0;
         }
     fprintf(stderr, "max clients reached\n");
-    close(*client_fd);
+    close(client_fd);
     return 1;
 }
