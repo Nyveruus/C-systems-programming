@@ -30,7 +30,7 @@ int server(char *ip, int port, char *ca, char *cert, char *key) {
 
     setup_tcp(&socket_fd, ip, port);
 
-    poll_loop(socket_fd, ca, cert, key, ctx);
+    poll_loop(socket_fd, ctx);
 
     SSL_CTX_free(ctx);
     return 0;
@@ -46,15 +46,14 @@ void setup_context(SSL_CTX **ctx, char *ca, char *cert, char *key) {
         perror("set ca");
         exit(1);
     }
-    if (!SSL_CTX_set_client_CA_list(*ctx, SSL_load_client_CA_file(ca))) {
-        perror("set client ca");
-        exit(1);
-    }
+
+    SSL_CTX_set_client_CA_list(*ctx, SSL_load_client_CA_file(ca));
+
     if (!SSL_CTX_use_certificate_file(*ctx, cert, SSL_FILETYPE_PEM)) {
         perror("set certificate");
         exit(1);
     }
-    if (!SSL_CTX_use_Privatekey_file(*ctx, key, SSL_FILETYPE_PEM)) {
+    if (!SSL_CTX_use_PrivateKey_file(*ctx, key, SSL_FILETYPE_PEM)) {
         perror("Private key");
         exit(1);
     }
@@ -159,7 +158,7 @@ int tcp_accept_function(int socket_fd, struct pollfd *fds, int *nfds, int *out_i
 }
 
 int tls_accept_function(SSL **ssls, SSL_CTX *ctx, struct pollfd *fds, int out_index) {
-    if (!(ssls[out_index] = SSL_new(ctx))
+    if (!(ssls[out_index] = SSL_new(ctx)))
         return 1;
     if (!SSL_set_fd(ssls[out_index], fds[out_index].fd)) {
         perror("SSL_set_fd");
