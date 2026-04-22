@@ -131,10 +131,10 @@ void poll_loop(int socket_fd, SSL_CTX *ctx) {
         //read and write STDIN_FILENO
         if (number_revents > 0 && (fds[1].revents & POLLIN)) {
             //read
-            size_t capacity;
+            size_t total;
             char *buffer;
 
-            if ((buffer = read_server(fds, &capacity)) == NULL)
+            if ((buffer = read_server(fds, &total)) == NULL)
                 continue;
 
             //write
@@ -194,25 +194,25 @@ int tls_accept_function(SSL **ssls, SSL_CTX *ctx, struct pollfd *fds, int out_in
     return 0;
 }
 
-char *read_server(struct pollfd *fds, size_t *capacity) {
+char *read_server(struct pollfd *fds, size_t *total) {
     //use read multiple times, if read is full capacity, then realloc and read again, if EOF break
-    *capacity = BUFFER_SIZE;
-    char *buffer = malloc(BUFFER_SIZE);
+    size_t capacity = BUFFER_SIZE;
+    char *buffer = malloc(capacity);
     if (!buffer)
         return NULL;
 
-    ssize_t total = 0;
+    *total = 0;
     ssize_t r;
     do {
-        r = read(fds[1].fd, buffer + total, BUFFER_SIZE);
+        r = read(fds[1].fd, buffer + *total, BUFFER_SIZE);
         if (r < 0) {
             free(buffer);
             return NULL;
         }
-        total += r;
-        if (total == *capacity) {
-            *capacity += BUFFER_SIZE;
-            char *tmp = realloc(buffer, *capacity);
+        *total += r;
+        if (*total == capacity) {
+            capacity += BUFFER_SIZE;
+            char *tmp = realloc(buffer, capacity);
             if (!tmp) {
                 free(buffer);
                 return NULL;
