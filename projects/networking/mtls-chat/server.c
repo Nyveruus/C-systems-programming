@@ -23,6 +23,7 @@ void setup_tcp(int *socket_fd, char *ip, int port);
 void poll_loop(int socket_fd, SSL_CTX *ctx);
 int tcp_accept_function(int socket_fd, struct pollfd *fds, int *nfds, int *out_index);
 int tls_accept_function(SSL **ssls, SSL_CTX *ctx, struct pollfd *fds, int out_index);
+char *read_server(struct pollfd *fds, size_t *capacity);
 
 int server(char *ip, int port, char *ca, char *cert, char *key) {
     SSL_CTX *ctx;
@@ -133,10 +134,9 @@ void poll_loop(int socket_fd, SSL_CTX *ctx) {
             size_t capacity;
             char *buffer;
 
-            if ((buffer = read_server(fds, &capacity)) == NULL) {
-                free(buffer);
+            if ((buffer = read_server(fds, &capacity)) == NULL)
                 continue;
-            }
+
             //write
 
             free(buffer);
@@ -201,17 +201,23 @@ char *read_server(struct pollfd *fds, size_t *capacity) {
     if (!buffer)
         return NULL;
 
+    ssize_t total = 0;
     ssize_t r;
-    size_t total = 0;
     do {
-        r = read(fds[1].fd, buffer + total, *capacity);
-        if (r < 0)
+        r = read(fds[1].fd, buffer + total, BUFFER_SIZE);
+        if (r < 0) {
+            free(buffer);
             return NULL;
+        }
         total += r;
         if (total == *capacity) {
             *capacity += BUFFER_SIZE;
-            if (!(buffer = realloc(buffer, *capacity))
+            char *tmp = realloc(buffer, *capacity);
+            if (!tmp) {
+                free(buffer);
                 return NULL;
+            }
+            buffer = tmp;
         }
     } while (r != 0);
 
