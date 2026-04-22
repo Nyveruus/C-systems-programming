@@ -16,6 +16,8 @@
 #define MAX_CLIENTS 100
 #define TIMEOUT 2000
 
+#define BUFFER_SIZE 1024
+
 void setup_context(SSL_CTX **ctx, char *ca, char *cert, char *key);
 void setup_tcp(int *socket_fd, char *ip, int port);
 void poll_loop(int socket_fd, SSL_CTX *ctx);
@@ -115,6 +117,7 @@ void poll_loop(int socket_fd, SSL_CTX *ctx) {
         if (number_revents > 0 && (fds[0].revents & POLLIN)) {
             //tcp
             int out_index;
+
             if (tcp_accept_function(socket_fd, fds, &nfds, &out_index) == 1)
                 continue;
             //tls, if tls fails, close tcp client socket and reset poll with out_index
@@ -125,6 +128,19 @@ void poll_loop(int socket_fd, SSL_CTX *ctx) {
             }
         }
         //read and write STDIN_FILENO
+        if (number_revents > 0 && (fds[1].revents & POLLIN)) {
+            //read
+            size_t capacity;
+            char *buffer;
+
+            if ((buffer = read_server(fds, &capacity)) == NULL) {
+                free(buffer);
+                continue;
+            }
+            //write
+
+            free(buffer);
+        }
         //read from clients (detect disconnects and close fds, free memory)
     }
 }
@@ -176,4 +192,28 @@ int tls_accept_function(SSL **ssls, SSL_CTX *ctx, struct pollfd *fds, int out_in
     }
 
     return 0;
+}
+
+char *read_server(struct pollfd *fds, size_t *capacity) {
+    //use read multiple times, if read is full capacity, then realloc and read again, if EOF break
+    *capacity = BUFFER_SIZE;
+    char *buffer = malloc(BUFFER_SIZE);
+    if (!buffer)
+        return NULL;
+
+    ssize_t r;
+    size_t total = 0;
+    do {
+        r = read(fds[1].fd, buffer + total, *capacity);
+        if (r < 0)
+            return NULL;
+        total += r;
+        if (total == *capacity) {
+            *capacity += BUFFER_SIZE;
+            if (!(buffer = realloc(buffer, *capacity))
+                return NULL;
+        }
+    } while (r != 0);
+
+    return buffer;
 }
