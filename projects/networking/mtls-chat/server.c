@@ -17,6 +17,7 @@
 #define TIMEOUT 2000
 
 #define BUFFER_SIZE 1024
+#define TLS_RECORD_SIZE 16384
 
 void setup_context(SSL_CTX **ctx, char *ca, char *cert, char *key);
 void setup_tcp(int *socket_fd, char *ip, int port);
@@ -144,6 +145,11 @@ void poll_loop(int socket_fd, SSL_CTX *ctx) {
             free(buffer);
         }
         //read from clients (detect disconnects and close fds, free memory)
+        for (int i = 2; i < nfds; i++) {
+            if (fds[i].fd != -1 && (fds[i].revents & POLLIN)) {
+                monitor(i, fds, ssls);
+            }
+        }
     }
 }
 
@@ -232,4 +238,37 @@ void broadcast(struct pollfd *fds, char *buffer, size_t total, int nfds, SSL **s
             SSL_write(ssls[i], buffer, total);
         }
     }
+}
+
+void monitor(int index, struct pollfd *fds, SSL **ssls) {
+    char buffer[TLS_RECORD_SIZE];
+    int r = SSL_read(ssls[index], buffer, TLS_RECORD_SIZE);
+
+    if (r <= 0) {
+        switch (SSL_get_error(ssls[index], r)) {
+
+            case SSL_ERROR_SYSCALL:
+            case SSL_ERROR_SSL:
+                SSL_free(ssls[index]);
+                close(fds[index].fd);
+                fds[index].fd = -1;
+                return;
+
+            case SSL_ERROR_ZERO_RETURN:
+                printf("Client disconnect");
+                goto cleanup;
+            default:
+                fprintf(sdterr, "SSL_read error\n");
+                goto cleanup;
+        }
+    }
+    write(STDOUT_FILENO, buffer, r);
+    return;
+
+cleanup:
+    SSL_shutdown(ssls[index]);
+    SSL_free(ssls[index]);
+
+    close(fds[index].fd);
+    fds[index].fd = -1;
 }
