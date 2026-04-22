@@ -264,7 +264,7 @@ void monitor(int index, struct pollfd *fds, SSL **ssls) {
                 return;
 
             case SSL_ERROR_ZERO_RETURN:
-                printf("Client disconnect");
+                printf("Client disconnect\n");
                 goto cleanup;
 
             default:
