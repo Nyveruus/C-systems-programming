@@ -250,17 +250,25 @@ void monitor(int index, struct pollfd *fds, SSL **ssls) {
 
             case SSL_ERROR_SYSCALL:
             case SSL_ERROR_SSL:
+                ERR_print_errors_fp(stderr);
+
                 SSL_free(ssls[index]);
                 ssls[index] = NULL;
+
                 close(fds[index].fd);
                 fds[index].fd = -1;
+                return;
+
+            case SSL_ERROR_WANT_READ:
+            case SSL_ERROR_WANT_WRITE:
                 return;
 
             case SSL_ERROR_ZERO_RETURN:
                 printf("Client disconnect");
                 goto cleanup;
+
             default:
-                fprintf(stderr, "SSL_read error\n");
+                ERR_print_errors_fp(stderr);
                 goto cleanup;
         }
     }
