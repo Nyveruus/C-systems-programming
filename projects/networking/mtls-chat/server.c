@@ -26,6 +26,7 @@ int tcp_accept_function(int socket_fd, struct pollfd *fds, int *nfds, int *out_i
 int tls_accept_function(SSL **ssls, SSL_CTX *ctx, struct pollfd *fds, int out_index);
 char *read_server(struct pollfd *fds, size_t *total);
 void broadcast(struct pollfd *fds, char *buffer, size_t total, int nfds, SSL **ssls);
+void monitor(int index, struct pollfd *fds, SSL **ssls);
 
 int server(char *ip, int port, char *ca, char *cert, char *key) {
     SSL_CTX *ctx;
