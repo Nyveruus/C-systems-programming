@@ -100,6 +100,7 @@ void setup_tcp(int *socket_fd, char *ip, int port) {
 void poll_loop(int socket_fd, SSL_CTX *ctx) {
     struct pollfd fds[MAX_CLIENTS];
     SSL *ssls[MAX_CLIENTS];
+    memset(ssls, 0, sizeof(ssls));
     int number_revents, nfds = 2;
 
     fds[0].fd = socket_fd;
@@ -250,6 +251,7 @@ void monitor(int index, struct pollfd *fds, SSL **ssls) {
             case SSL_ERROR_SYSCALL:
             case SSL_ERROR_SSL:
                 SSL_free(ssls[index]);
+                ssls[index] = NULL;
                 close(fds[index].fd);
                 fds[index].fd = -1;
                 return;
@@ -258,7 +260,7 @@ void monitor(int index, struct pollfd *fds, SSL **ssls) {
                 printf("Client disconnect");
                 goto cleanup;
             default:
-                fprintf(sdterr, "SSL_read error\n");
+                fprintf(stderr, "SSL_read error\n");
                 goto cleanup;
         }
     }
@@ -268,6 +270,7 @@ void monitor(int index, struct pollfd *fds, SSL **ssls) {
 cleanup:
     SSL_shutdown(ssls[index]);
     SSL_free(ssls[index]);
+    ssls[index] = NULL;
 
     close(fds[index].fd);
     fds[index].fd = -1;
