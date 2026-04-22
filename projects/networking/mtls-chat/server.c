@@ -23,8 +23,8 @@ void setup_tcp(int *socket_fd, char *ip, int port);
 void poll_loop(int socket_fd, SSL_CTX *ctx);
 int tcp_accept_function(int socket_fd, struct pollfd *fds, int *nfds, int *out_index);
 int tls_accept_function(SSL **ssls, SSL_CTX *ctx, struct pollfd *fds, int out_index);
-char *read_server(struct pollfd *fds, size_t *capacity);
-void broadcast(struct pollfd *fds, char *buffer, size_t total, int nfds);
+char *read_server(struct pollfd *fds, size_t *total);
+void broadcast(struct pollfd *fds, char *buffer, size_t total, int nfds, SSL **ssls);
 
 int server(char *ip, int port, char *ca, char *cert, char *key) {
     SSL_CTX *ctx;
@@ -139,7 +139,7 @@ void poll_loop(int socket_fd, SSL_CTX *ctx) {
                 continue;
 
             //write
-            broadcast(fds, buffer, total, nfds);
+            broadcast(fds, buffer, total, nfds, ssls);
 
             free(buffer);
         }
@@ -226,10 +226,10 @@ char *read_server(struct pollfd *fds, size_t *total) {
     return buffer;
 }
 
-void broadcast(struct pollfd *fds, char *buffer, size_t total, int nfds) {
+void broadcast(struct pollfd *fds, char *buffer, size_t total, int nfds, SSL **ssls) {
     for (int i = 2; i < nfds; i++) {
         if (fds[i].fd != -1) {
-            write(fds[i].fd, buffer, total);
+            SSL_write(ssls[i], buffer, total);
         }
     }
 }
