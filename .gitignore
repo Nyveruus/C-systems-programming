@@ -6,3 +6,6 @@ portscanner
 *kate-swp
 *.pem
 *.csr
+*.crt
+*.key
+*.srl

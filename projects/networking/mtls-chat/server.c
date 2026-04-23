@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <openssl/ssl.h>
+#include <openssl/err.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -24,7 +25,7 @@ void setup_tcp(int *socket_fd, char *ip, int port);
 void poll_loop(int socket_fd, SSL_CTX *ctx);
 int tcp_accept_function(int socket_fd, struct pollfd *fds, int *nfds, int *out_index);
 int tls_accept_function(SSL **ssls, SSL_CTX *ctx, struct pollfd *fds, int out_index);
-char *read_server(struct pollfd *fds, size_t *total);
+int read_server(char *buffer, struct pollfd *fds, size_t *total);
 void broadcast(struct pollfd *fds, char *buffer, size_t total, int nfds, SSL **ssls);
 void monitor(int index, struct pollfd *fds, SSL **ssls);
 
@@ -136,15 +137,12 @@ void poll_loop(int socket_fd, SSL_CTX *ctx) {
         if (number_revents > 0 && (fds[1].revents & POLLIN)) {
             //read
             size_t total;
-            char *buffer;
+            char buffer[TLS_RECORD_SIZE];
 
-            if ((buffer = read_server(fds, &total)) == NULL)
+            if (read_server(buffer, fds, &total))
                 continue;
-
             //write
             broadcast(fds, buffer, total, nfds, ssls);
-
-            free(buffer);
         }
         //read from clients (detect disconnects and close fds, free memory)
         for (int i = 2; i < nfds; i++) {
@@ -204,37 +202,17 @@ int tls_accept_function(SSL **ssls, SSL_CTX *ctx, struct pollfd *fds, int out_in
     return 0;
 }
 
-char *read_server(struct pollfd *fds, size_t *total) {
-    //use read multiple times, if read is full capacity, then realloc and read again, if EOF break
-    size_t capacity = BUFFER_SIZE;
-    char *buffer = malloc(capacity);
-    if (!buffer)
-        return NULL;
+int read_server(char *buffer, struct pollfd *fds, size_t *total) {
 
-    *total = 0;
-    ssize_t r;
-    do {
-        r = read(fds[1].fd, buffer + *total, BUFFER_SIZE);
-        if (r < 0) {
-            free(buffer);
-            return NULL;
-        }
-        *total += r;
-        if (*total == capacity) {
-            capacity += BUFFER_SIZE;
-            char *tmp = realloc(buffer, capacity);
-            if (!tmp) {
-                free(buffer);
-                return NULL;
-            }
-            buffer = tmp;
-        }
-    } while (r != 0);
+    ssize_t r = read(fds[1].fd, buffer, TLS_RECORD_SIZE);
+    if (r <= 0) return 1;
 
-    return buffer;
+    *total = (size_t)r;
+    return 0;
 }
 
 void broadcast(struct pollfd *fds, char *buffer, size_t total, int nfds, SSL **ssls) {
+
     for (int i = 2; i < nfds; i++) {
         if (fds[i].fd != -1) {
             SSL_write(ssls[i], buffer, total);
