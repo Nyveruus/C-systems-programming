@@ -107,7 +107,10 @@ static void tcp_tls_connect(int *socket_fd, char *ip, int port, SSL_CTX *ctx, SS
         fprintf(stderr, "Connection failed\n");
         exit(1);
     }
-    SSL_read(*sslo, NULL, 0);
+
+    //bug fix. set fd to non blocking so SSl_write doesnt block waiting to read session ticket
+    int flags = fcntl(*socket_fd, F_GETFL, 0); //get current fd flags
+    fcntl(*socket_fd, F_SETFL, flags | O_NONBLOCK); //use OR to avoid overwriting
 }
 
 static void poll_loop(int socket_fd, SSL_CTX *ctx, SSL *sslo) {
