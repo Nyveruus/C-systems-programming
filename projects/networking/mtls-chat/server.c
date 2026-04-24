@@ -27,7 +27,7 @@ int tcp_accept_function(int socket_fd, struct pollfd *fds, int *nfds, int *out_i
 int tls_accept_function(SSL **ssls, SSL_CTX *ctx, struct pollfd *fds, int out_index);
 int read_server(char *buffer, struct pollfd *fds, size_t *total);
 void broadcast(struct pollfd *fds, char *buffer, size_t total, int nfds, SSL **ssls);
-void monitor(int index, struct pollfd *fds, SSL **ssls);
+void monitor(int index, struct pollfd *fds, SSL **ssls, int *nfds);
 
 int server(char *ip, int port, char *ca, char *cert, char *key) {
     SSL_CTX *ctx;
@@ -130,6 +130,7 @@ void poll_loop(int socket_fd, SSL_CTX *ctx) {
             if (tls_accept_function(ssls, ctx, fds, out_index) == 1) {
                 close(fds[out_index].fd);
                 fds[out_index].fd = -1;
+                nfds--;
                 continue;
             }
         }
@@ -147,7 +148,7 @@ void poll_loop(int socket_fd, SSL_CTX *ctx) {
         //read from clients (detect disconnects and close fds, free memory)
         for (int i = 2; i < nfds; i++) {
             if (fds[i].fd != -1 && (fds[i].revents & POLLIN)) {
-                monitor(i, fds, ssls);
+                monitor(i, fds, ssls, &nfds);
             }
         }
     }
@@ -220,7 +221,7 @@ void broadcast(struct pollfd *fds, char *buffer, size_t total, int nfds, SSL **s
     }
 }
 
-void monitor(int index, struct pollfd *fds, SSL **ssls) {
+void monitor(int index, struct pollfd *fds, SSL **ssls, int *nfds) {
     char buffer[TLS_RECORD_SIZE];
     int r = SSL_read(ssls[index], buffer, TLS_RECORD_SIZE);
 
@@ -238,6 +239,7 @@ void monitor(int index, struct pollfd *fds, SSL **ssls) {
 
                 close(fds[index].fd);
                 fds[index].fd = -1;
+                (*nfds)--;
                 return;
 
             case SSL_ERROR_WANT_READ:
@@ -259,4 +261,5 @@ cleanup:
 
     close(fds[index].fd);
     fds[index].fd = -1;
+    (*nfds)--;
 }
