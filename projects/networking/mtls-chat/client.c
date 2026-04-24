@@ -17,7 +17,7 @@ static void setup_context(SSL_CTX **ctx, char *ca, char *cert, char *key);
 static void tcp_tls_connect(int *socket_fd, char *ip, int port, SSL_CTX *ctx, SSL **sslo);
 static void poll_loop(int socket_fd, SSL_CTX *ctx, SSL *sslo);
 static void monitor(SSL *sslo);
-static int read_server(char *buffer, size_t *total, struct pollfd *fds);
+static int read_client(char *buffer, size_t *total, struct pollfd *fds);
 
 int client(char *ip, int port, char *ca, char *cert, char *key) {
     int socket_fd;
@@ -113,16 +113,16 @@ static void poll_loop(int socket_fd, SSL_CTX *ctx, SSL *sslo) {
 
     for (;;) {
         number_revents = poll(fds, nfds, TIMEOUT);
-        //read from server
-        if (number_revents > 0 && (fds[1].revents & POLLIN)) {
-            monitor(sslo);
-        }
         //stdin
         if (number_revents > 0 && (fds[0].revents & POLLIN)) {
             size_t total;
             char buffer[TLS_RECORD_SIZE];
-            if (read_server(buffer, &total, fds)) continue;
+            if (read_client(buffer, &total, fds)) continue;
             SSL_write(sslo, buffer, total);
+        }
+        //read from server
+        if (number_revents > 0 && (fds[1].revents & POLLIN)) {
+            monitor(sslo);
         }
     }
 }
@@ -137,7 +137,7 @@ static void monitor(SSL *sslo) {
             case SSL_ERROR_ZERO_RETURN:
             case SSL_ERROR_SYSCALL:
             case SSL_ERROR_SSL:
-                printf("Client disconnected\n");
+                printf("Server disconnected\n");
                 exit(1);
 
             case SSL_ERROR_WANT_READ:
@@ -153,7 +153,7 @@ static void monitor(SSL *sslo) {
     return;
 }
 
-static int read_server(char *buffer, size_t *total, struct pollfd *fds) {
+static int read_client(char *buffer, size_t *total, struct pollfd *fds) {
     ssize_t r = read(fds[0].fd, buffer, TLS_RECORD_SIZE);
     if (r <= 0) return 1;
 

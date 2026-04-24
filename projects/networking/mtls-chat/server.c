@@ -146,11 +146,12 @@ static void poll_loop(int socket_fd, SSL_CTX *ctx) {
             broadcast(fds, buffer, total, nfds, ssls);
         }
         //read from clients (detect disconnects and close fds, free memory)
-        for (int i = 2; i < nfds; i++) {
-            if (fds[i].fd != -1 && (fds[i].revents & POLLIN)) {
-                monitor(i, fds, ssls, &nfds);
+        if (number_revents > 0)
+            for (int i = 2; i < nfds; i++) {
+                if (fds[i].fd != -1 && (fds[i].revents & POLLIN)) {
+                    monitor(i, fds, ssls, &nfds);
+                }
             }
-        }
     }
 }
 
@@ -197,7 +198,6 @@ static int tls_accept_function(SSL **ssls, SSL_CTX *ctx, struct pollfd *fds, int
         SSL_free(ssls[out_index]);
         return 1;
     }
-
     return 0;
 }
 
