@@ -12,19 +12,21 @@
 #define TLS_RECORD_SIZE 16384
 
 void setup_context(SSL_CTX **ctx, char *ca, char *cert, char *key);
-void tcp_connect(int *socket_fd, char *ip, int port);
-void poll_loop(int socket_fd, SSL_CTX *ctx);
+void tcp_tls_connect(int *socket_fd, char *ip, int port, SSL_CTX *ctx, SSL **sslo);
+void poll_loop(int socket_fd, SSL_CTX *ctx, SSL *sslo);
+void monitor(SSL *sslo);
+int read_server(char *buffer, size_t *total, struct pollfd fds);
 
 int client(char *ip, int port, char *ca, char *cert, char *key) {
     int socket_fd;
     SSL_CTX *ctx;
-    SSL *ssls;
+    SSL *sslo;
 
     setup_context(&ctx, ca, cert, key);
 
-    tcp_tls_connect(&socket_fd, ip, port, ctx, &ssls);
+    tcp_tls_connect(&socket_fd, ip, port, ctx, &sslo);
 
-    poll_loop(socket_fd, ctx, ssls);
+    poll_loop(socket_fd, ctx, sslo);
 
     SSL_CTX_free(ctx);
     return 0;
@@ -60,7 +62,7 @@ void setup_context(SSL_CTX **ctx, char *ca, char *cert, char *key) {
     return;
 }
 
-void tcp_tls_connect(int *socket_fd, char *ip, int port, SSL_CTX *ctx, SSL **ssls) {
+void tcp_tls_connect(int *socket_fd, char *ip, int port, SSL_CTX *ctx, SSL **sslo) {
     struct sockaddr_in server;
     socklen_t addr_size = sizeof(struct sockaddr);
 
@@ -79,15 +81,15 @@ void tcp_tls_connect(int *socket_fd, char *ip, int port, SSL_CTX *ctx, SSL **ssl
         exit(1);
     }
     //tls
-    if (!(*ssls = SSL_new(ctx))) {
+    if (!(*sslo = SSL_new(ctx))) {
         perror("SSL_new");
         exit(1);
     }
-    if (!SSL_set_fd(*ssls, *socket_fd)) {
+    if (!SSL_set_fd(*sslo, *socket_fd)) {
         perror("SSL_set_fd");
         exit(1);
     }
-    if (SSL_connect(*ssls) <= 0) {
+    if (SSL_connect(*sslo) <= 0) {
         //ssl_get_error
         fprintf(stderr, "Connection failed\n");
         exit(1);
@@ -95,7 +97,7 @@ void tcp_tls_connect(int *socket_fd, char *ip, int port, SSL_CTX *ctx, SSL **ssl
 
 }
 
-void poll_loop(int socket_fd, SSL_CTX *ctx, SSL *ssls) {
+void poll_loop(int socket_fd, SSL_CTX *ctx, SSL *sslo) {
     struct pollfd fds[2];
     int number_revents, nfds = 2;
 
@@ -111,21 +113,24 @@ void poll_loop(int socket_fd, SSL_CTX *ctx, SSL *ssls) {
         number_revents = poll(fds, nfds, TIMEOUT);
         //read from server
         if (number_revents > 0 && (fds[1].revents & POLLIN)) {
-            read_server(ssls));
+            monitor(sslo);
         }
         //stdin
         if (number_revents > 0 && (fds[0].rvents & POLLIN)) {
-
+            size_t total;
+            char buffer[TLS_RECORD_SIZE];
+            if (read_server(buffer, &total, fds)) continue;
+            SSL_write(sslo, buffer, total);
         }
     }
 }
 
-void read_server(SSL *ssls) {
+void monitor(SSL *sslo) {
     char buffer[TLS_RECORD_SIZE];
-    int r = SSL_read(ssls, buffer, TLS_RECORD_SIZE);
+    int r = SSL_read(sslo, buffer, TLS_RECORD_SIZE);
 
     if (r <= 0) {
-        switch (SSL_get_error(ssls, r)) {
+        switch (SSL_get_error(sslo, r)) {
 
             case SSL_ERROR_ZERO_RETURN:
             case SSL_ERROR_SYSCALL:
@@ -144,4 +149,12 @@ void read_server(SSL *ssls) {
     }
     write(STDOUT_FILENO, buffer, r);
     return;
+}
+
+int read_server(char *buffer, size_t *total, struct pollfd fds) {
+    ssize_t r = read(fds[0].fd, buffer, TLS_RECORD_SIZE);
+    if (r <= 0) return 1;
+
+    *total = (size_t)r;
+    return 0;
 }
