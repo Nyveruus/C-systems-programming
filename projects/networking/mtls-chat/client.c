@@ -7,6 +7,7 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #include <poll.h>
+#include <fcntl.h>
 
 #include "client.h"
 
@@ -18,6 +19,11 @@ static void tcp_tls_connect(int *socket_fd, char *ip, int port, SSL_CTX *ctx, SS
 static void poll_loop(int socket_fd, SSL_CTX *ctx, SSL *sslo);
 static void monitor(SSL *sslo);
 static int read_client(char *buffer, size_t *total, struct pollfd *fds);
+
+static int new_session_cb(SSL *sslo, SSL_SESSION *ses) {
+    SSL_SESSION_print_fp(stdout, ses);
+    return 0;
+}
 
 int client(char *ip, int port, char *ca, char *cert, char *key) {
     int socket_fd;
@@ -58,6 +64,11 @@ static void setup_context(SSL_CTX **ctx, char *ca, char *cert, char *key) {
         exit(1);
     }
 
+    //set caching for ticket
+    SSL_CTX_set_session_cache_mode(*ctx, SSL_SESS_CACHE_CLIENT);
+    //set callback function to print ticket when session is negotiated
+    SSL_CTX_sess_set_new_cb(*ctx, new_session_cb);
+
     SSL_CTX_set_verify(*ctx, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, NULL);
     SSL_CTX_set_verify_depth(*ctx, 1);
 
@@ -96,7 +107,7 @@ static void tcp_tls_connect(int *socket_fd, char *ip, int port, SSL_CTX *ctx, SS
         fprintf(stderr, "Connection failed\n");
         exit(1);
     }
-
+    SSL_read(*sslo, NULL, 0);
 }
 
 static void poll_loop(int socket_fd, SSL_CTX *ctx, SSL *sslo) {

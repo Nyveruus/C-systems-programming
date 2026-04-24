@@ -119,6 +119,7 @@ static void poll_loop(int socket_fd, SSL_CTX *ctx) {
 
     for (;;) {
         number_revents = poll(fds, nfds, TIMEOUT);
+
         //accept connections
         if (number_revents > 0 && (fds[0].revents & POLLIN)) {
             //tcp
@@ -221,8 +222,8 @@ static void broadcast(struct pollfd *fds, char *buffer, size_t total, int nfds, 
 
 static void monitor(int index, struct pollfd *fds, SSL **ssls, int *nfds) {
     char buffer[TLS_RECORD_SIZE];
-    int r = SSL_read(ssls[index], buffer, TLS_RECORD_SIZE);
 
+    int r = SSL_read(ssls[index], buffer, TLS_RECORD_SIZE);
     if (r <= 0) {
         switch (SSL_get_error(ssls[index], r)) {
 
