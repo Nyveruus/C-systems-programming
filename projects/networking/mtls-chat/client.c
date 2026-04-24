@@ -4,20 +4,24 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <openssl/ssl.h>
+#include <poll.h>
 
 #include "client.h"
+
+#define TIMEOUT 2000
 
 void setup_context(SSL_CTX **ctx, char *ca, char *cert, char *key);
 void tcp_connect(int *socket_fd, char *ip, int port);
 void poll_loop(int socket_fd, SSL_CTX *ctx);
 
 int client(char *ip, int port, char *ca, char *cert, char *key) {
-    SSL_CTX *ctx;
     int socket_fd;
+    SSL_CTX *ctx;
+    SSL *ssls;
 
     setup_context(&ctx, ca, cert, key);
 
-    tcp_connect(&socket_fd, ip, port);
+    tcp_tls_connect(&socket_fd, ip, port, ctx, &ssls);
 
     poll_loop(socket_fd, ctx);
 
@@ -55,7 +59,7 @@ void setup_context(SSL_CTX **ctx, char *ca, char *cert, char *key) {
     return;
 }
 
-void tcp_connect(int *socket_fd, char *ip, int port) {
+void tcp_tls_connect(int *socket_fd, char *ip, int port, SSL_CTX *ctx, SSL **ssls) {
     struct sockaddr_in server;
     socklen_t addr_size = sizeof(struct sockaddr);
 
@@ -73,13 +77,14 @@ void tcp_connect(int *socket_fd, char *ip, int port) {
         perror("connect");
         exit(1);
     }
+    //tls
+    if (*ssls = SSL_new(ctx))
 
 }
 
 void poll_loop(int socket_fd, SSL_CTX *ctx) {
     struct pollfd fds[2];
     int number_revents, nfds = 2;
-    SSL *ssl = NULL;
 
     fds[0].fd = STDIN_FILENO;
     fds[0].events = POLLIN;
@@ -90,6 +95,15 @@ void poll_loop(int socket_fd, SSL_CTX *ctx) {
     fds[1].revents = 0;
 
     for (;;) {
+        number_revents = poll(fds, nfds, TIMEOUT);
+        //read from server
+        if (number_revents > 0 && (fds[1].revents & POLLIN)) {
+            if (read_client) continue;
 
+        }
+        //stdin
+        if (number_revents > 0 && (fds[0].rvents & POLLIN)) {
+
+        }
     }
 }

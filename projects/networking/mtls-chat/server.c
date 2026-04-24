@@ -186,13 +186,11 @@ int tls_accept_function(SSL **ssls, SSL_CTX *ctx, struct pollfd *fds, int out_in
     if (!(ssls[out_index] = SSL_new(ctx)))
         return 1;
     if (!SSL_set_fd(ssls[out_index], fds[out_index].fd)) {
-        perror("SSL_set_fd");
         SSL_free(ssls[out_index]);
         return 1;
     }
     int r;
     if ((r = SSL_accept(ssls[out_index])) <= 0) {
-        perror("SSL_accept");
         if (r < 0) {
             SSL_shutdown(ssls[out_index]);
         }
