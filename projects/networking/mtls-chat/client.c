@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <openssl/ssl.h>
+#include <openssl/err.h>
 #include <poll.h>
 
 #include "client.h"
@@ -11,11 +13,11 @@
 #define TIMEOUT 2000
 #define TLS_RECORD_SIZE 16384
 
-void setup_context(SSL_CTX **ctx, char *ca, char *cert, char *key);
-void tcp_tls_connect(int *socket_fd, char *ip, int port, SSL_CTX *ctx, SSL **sslo);
-void poll_loop(int socket_fd, SSL_CTX *ctx, SSL *sslo);
-void monitor(SSL *sslo);
-int read_server(char *buffer, size_t *total, struct pollfd fds);
+static void setup_context(SSL_CTX **ctx, char *ca, char *cert, char *key);
+static void tcp_tls_connect(int *socket_fd, char *ip, int port, SSL_CTX *ctx, SSL **sslo);
+static void poll_loop(int socket_fd, SSL_CTX *ctx, SSL *sslo);
+static void monitor(SSL *sslo);
+static int read_server(char *buffer, size_t *total, struct pollfd *fds);
 
 int client(char *ip, int port, char *ca, char *cert, char *key) {
     int socket_fd;
@@ -32,7 +34,7 @@ int client(char *ip, int port, char *ca, char *cert, char *key) {
     return 0;
 }
 
-void setup_context(SSL_CTX **ctx, char *ca, char *cert, char *key) {
+static void setup_context(SSL_CTX **ctx, char *ca, char *cert, char *key) {
     if (!(*ctx = SSL_CTX_new(TLS_client_method()))) {
         perror("SSL_CTX_new");
         exit(1);
@@ -62,7 +64,7 @@ void setup_context(SSL_CTX **ctx, char *ca, char *cert, char *key) {
     return;
 }
 
-void tcp_tls_connect(int *socket_fd, char *ip, int port, SSL_CTX *ctx, SSL **sslo) {
+static void tcp_tls_connect(int *socket_fd, char *ip, int port, SSL_CTX *ctx, SSL **sslo) {
     struct sockaddr_in server;
     socklen_t addr_size = sizeof(struct sockaddr);
 
@@ -97,7 +99,7 @@ void tcp_tls_connect(int *socket_fd, char *ip, int port, SSL_CTX *ctx, SSL **ssl
 
 }
 
-void poll_loop(int socket_fd, SSL_CTX *ctx, SSL *sslo) {
+static void poll_loop(int socket_fd, SSL_CTX *ctx, SSL *sslo) {
     struct pollfd fds[2];
     int number_revents, nfds = 2;
 
@@ -116,7 +118,7 @@ void poll_loop(int socket_fd, SSL_CTX *ctx, SSL *sslo) {
             monitor(sslo);
         }
         //stdin
-        if (number_revents > 0 && (fds[0].rvents & POLLIN)) {
+        if (number_revents > 0 && (fds[0].revents & POLLIN)) {
             size_t total;
             char buffer[TLS_RECORD_SIZE];
             if (read_server(buffer, &total, fds)) continue;
@@ -125,7 +127,7 @@ void poll_loop(int socket_fd, SSL_CTX *ctx, SSL *sslo) {
     }
 }
 
-void monitor(SSL *sslo) {
+static void monitor(SSL *sslo) {
     char buffer[TLS_RECORD_SIZE];
     int r = SSL_read(sslo, buffer, TLS_RECORD_SIZE);
 
@@ -151,7 +153,7 @@ void monitor(SSL *sslo) {
     return;
 }
 
-int read_server(char *buffer, size_t *total, struct pollfd fds) {
+static int read_server(char *buffer, size_t *total, struct pollfd *fds) {
     ssize_t r = read(fds[0].fd, buffer, TLS_RECORD_SIZE);
     if (r <= 0) return 1;
 

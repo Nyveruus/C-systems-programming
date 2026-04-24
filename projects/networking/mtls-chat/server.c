@@ -20,14 +20,14 @@
 #define BUFFER_SIZE 1024
 #define TLS_RECORD_SIZE 16384
 
-void setup_context(SSL_CTX **ctx, char *ca, char *cert, char *key);
-void setup_tcp(int *socket_fd, char *ip, int port);
-void poll_loop(int socket_fd, SSL_CTX *ctx);
-int tcp_accept_function(int socket_fd, struct pollfd *fds, int *nfds, int *out_index);
-int tls_accept_function(SSL **ssls, SSL_CTX *ctx, struct pollfd *fds, int out_index);
-int read_server(char *buffer, struct pollfd *fds, size_t *total);
-void broadcast(struct pollfd *fds, char *buffer, size_t total, int nfds, SSL **ssls);
-void monitor(int index, struct pollfd *fds, SSL **ssls, int *nfds);
+static void setup_context(SSL_CTX **ctx, char *ca, char *cert, char *key);
+static void setup_tcp(int *socket_fd, char *ip, int port);
+static void poll_loop(int socket_fd, SSL_CTX *ctx);
+static int tcp_accept_function(int socket_fd, struct pollfd *fds, int *nfds, int *out_index);
+static int tls_accept_function(SSL **ssls, SSL_CTX *ctx, struct pollfd *fds, int out_index);
+static int read_server(char *buffer, struct pollfd *fds, size_t *total);
+static void broadcast(struct pollfd *fds, char *buffer, size_t total, int nfds, SSL **ssls);
+static void monitor(int index, struct pollfd *fds, SSL **ssls, int *nfds);
 
 int server(char *ip, int port, char *ca, char *cert, char *key) {
     SSL_CTX *ctx;
@@ -43,7 +43,7 @@ int server(char *ip, int port, char *ca, char *cert, char *key) {
     return 0;
 }
 
-void setup_context(SSL_CTX **ctx, char *ca, char *cert, char *key) {
+static void setup_context(SSL_CTX **ctx, char *ca, char *cert, char *key) {
     if (!(*ctx = SSL_CTX_new(TLS_server_method()))) {
         perror("SSL_CTX_new");
         exit(1);
@@ -75,7 +75,7 @@ void setup_context(SSL_CTX **ctx, char *ca, char *cert, char *key) {
     return;
 }
 
-void setup_tcp(int *socket_fd, char *ip, int port) {
+static void setup_tcp(int *socket_fd, char *ip, int port) {
     struct sockaddr_in server;
     socklen_t addr_size = sizeof(struct sockaddr);
 
@@ -99,7 +99,7 @@ void setup_tcp(int *socket_fd, char *ip, int port) {
     }
 }
 
-void poll_loop(int socket_fd, SSL_CTX *ctx) {
+static void poll_loop(int socket_fd, SSL_CTX *ctx) {
     struct pollfd fds[MAX_CLIENTS];
     SSL *ssls[MAX_CLIENTS];
     memset(ssls, 0, sizeof(ssls));
@@ -154,7 +154,7 @@ void poll_loop(int socket_fd, SSL_CTX *ctx) {
     }
 }
 
-int tcp_accept_function(int socket_fd, struct pollfd *fds, int *nfds, int *out_index) {
+static int tcp_accept_function(int socket_fd, struct pollfd *fds, int *nfds, int *out_index) {
     struct sockaddr_in client;
     socklen_t addr_len = sizeof(struct sockaddr);
     int client_fd;
@@ -182,7 +182,7 @@ int tcp_accept_function(int socket_fd, struct pollfd *fds, int *nfds, int *out_i
     return 1;
 }
 
-int tls_accept_function(SSL **ssls, SSL_CTX *ctx, struct pollfd *fds, int out_index) {
+static int tls_accept_function(SSL **ssls, SSL_CTX *ctx, struct pollfd *fds, int out_index) {
     if (!(ssls[out_index] = SSL_new(ctx)))
         return 1;
     if (!SSL_set_fd(ssls[out_index], fds[out_index].fd)) {
@@ -201,7 +201,7 @@ int tls_accept_function(SSL **ssls, SSL_CTX *ctx, struct pollfd *fds, int out_in
     return 0;
 }
 
-int read_server(char *buffer, struct pollfd *fds, size_t *total) {
+static int read_server(char *buffer, struct pollfd *fds, size_t *total) {
 
     ssize_t r = read(fds[1].fd, buffer, TLS_RECORD_SIZE);
     if (r <= 0) return 1;
@@ -210,7 +210,7 @@ int read_server(char *buffer, struct pollfd *fds, size_t *total) {
     return 0;
 }
 
-void broadcast(struct pollfd *fds, char *buffer, size_t total, int nfds, SSL **ssls) {
+static void broadcast(struct pollfd *fds, char *buffer, size_t total, int nfds, SSL **ssls) {
 
     for (int i = 2; i < nfds; i++) {
         if (fds[i].fd != -1) {
@@ -219,7 +219,7 @@ void broadcast(struct pollfd *fds, char *buffer, size_t total, int nfds, SSL **s
     }
 }
 
-void monitor(int index, struct pollfd *fds, SSL **ssls, int *nfds) {
+static void monitor(int index, struct pollfd *fds, SSL **ssls, int *nfds) {
     char buffer[TLS_RECORD_SIZE];
     int r = SSL_read(ssls[index], buffer, TLS_RECORD_SIZE);
 
