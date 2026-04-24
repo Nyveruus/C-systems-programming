@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 #include "server.h"
+#include "client.h"
 
 void usage(void) {
     fprintf(stderr, "Usage: ./mtlsapp server [IP] [PORT] [CA] [CERT] [KEY]\n");
@@ -15,7 +16,7 @@ int select_function(char **argv) {
     if (!strcmp(argv[1], "server"))
         server(argv[2], atoi(argv[3]), argv[4], argv[5], argv[6]);
     else if (!strcmp(argv[1], "client"))
-        return 1; //TODO client function
+        client(argv[2], atoi(argv[3]), argv[4], argv[5], argv[6]);
     else
         usage();
 }
