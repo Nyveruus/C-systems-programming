@@ -1,9 +1,15 @@
+#include <stdio.h>
 #include <stdlib.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <openssl/ssl.h>
 
 #include "client.h"
 
 void setup_context(SSL_CTX **ctx, char *ca, char *cert, char *key);
+void tcp_connect(int *socket_fd, char *ip, int port);
+void poll_loop(int socket_fd, SSL_CTX *ctx);
 
 int client(char *ip, int port, char *ca, char *cert, char *key) {
     SSL_CTX *ctx;
@@ -11,7 +17,9 @@ int client(char *ip, int port, char *ca, char *cert, char *key) {
 
     setup_context(&ctx, ca, cert, key);
 
-    tcp_connect(socket_fd, ip, port);
+    tcp_connect(&socket_fd, ip, port);
+
+    poll_loop(socket_fd, ctx);
 
     SSL_CTX_free(ctx);
     return 0;
@@ -47,6 +55,41 @@ void setup_context(SSL_CTX **ctx, char *ca, char *cert, char *key) {
     return;
 }
 
-void tcp_connect() {
+void tcp_connect(int *socket_fd, char *ip, int port) {
+    struct sockaddr_in server;
+    socklen_t addr_size = sizeof(struct sockaddr);
 
+    if ((*socket_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+        perror("socket");
+        exit(1);
+    }
+
+    memset(&server, 0, addr_size);
+    server.sin_family = AF_INET;
+    server.sin_port = htons((uint16_t)port);
+    server.sin_addr.s_addr = inet_addr(ip);
+
+    if (connect(*socket_fd, (struct sockaddr *)&server, addr_size) == -1) {
+        perror("connect");
+        exit(1);
+    }
+
+}
+
+void poll_loop(int socket_fd, SSL_CTX *ctx) {
+    struct pollfd fds[2];
+    int number_revents, nfds = 2;
+    SSL *ssl = NULL;
+
+    fds[0].fd = STDIN_FILENO;
+    fds[0].events = POLLIN;
+    fds[0].revents = 0;
+
+    fds[1].fd = socket_fd;
+    fds[1].events = POLLIN;
+    fds[1].revents = 0;
+
+    for (;;) {
+
+    }
 }
