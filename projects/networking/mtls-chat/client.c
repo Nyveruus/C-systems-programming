@@ -9,6 +9,7 @@
 #include "client.h"
 
 #define TIMEOUT 2000
+#define TLS_RECORD_SIZE 16384
 
 void setup_context(SSL_CTX **ctx, char *ca, char *cert, char *key);
 void tcp_connect(int *socket_fd, char *ip, int port);
@@ -23,7 +24,7 @@ int client(char *ip, int port, char *ca, char *cert, char *key) {
 
     tcp_tls_connect(&socket_fd, ip, port, ctx, &ssls);
 
-    poll_loop(socket_fd, ctx);
+    poll_loop(socket_fd, ctx, ssls);
 
     SSL_CTX_free(ctx);
     return 0;
@@ -78,11 +79,23 @@ void tcp_tls_connect(int *socket_fd, char *ip, int port, SSL_CTX *ctx, SSL **ssl
         exit(1);
     }
     //tls
-    if (*ssls = SSL_new(ctx))
+    if (!(*ssls = SSL_new(ctx))) {
+        perror("SSL_new");
+        exit(1);
+    }
+    if (!SSL_set_fd(*ssls, *socket_fd)) {
+        perror("SSL_set_fd");
+        exit(1);
+    }
+    if (SSL_connect(*ssls) <= 0) {
+        //ssl_get_error
+        fprintf(stderr, "Connection failed\n");
+        exit(1);
+    }
 
 }
 
-void poll_loop(int socket_fd, SSL_CTX *ctx) {
+void poll_loop(int socket_fd, SSL_CTX *ctx, SSL *ssls) {
     struct pollfd fds[2];
     int number_revents, nfds = 2;
 
@@ -98,12 +111,37 @@ void poll_loop(int socket_fd, SSL_CTX *ctx) {
         number_revents = poll(fds, nfds, TIMEOUT);
         //read from server
         if (number_revents > 0 && (fds[1].revents & POLLIN)) {
-            if (read_client) continue;
-
+            read_server(ssls));
         }
         //stdin
         if (number_revents > 0 && (fds[0].rvents & POLLIN)) {
 
         }
     }
+}
+
+void read_server(SSL *ssls) {
+    char buffer[TLS_RECORD_SIZE];
+    int r = SSL_read(ssls, buffer, TLS_RECORD_SIZE);
+
+    if (r <= 0) {
+        switch (SSL_get_error(ssls, r)) {
+
+            case SSL_ERROR_ZERO_RETURN:
+            case SSL_ERROR_SYSCALL:
+            case SSL_ERROR_SSL:
+                printf("Client disconnected\n");
+                exit(1);
+
+            case SSL_ERROR_WANT_READ:
+            case SSL_ERROR_WANT_WRITE:
+                return;
+
+            default:
+                ERR_print_errors_fp(stderr);
+                exit(1);
+        }
+    }
+    write(STDOUT_FILENO, buffer, r);
+    return;
 }
