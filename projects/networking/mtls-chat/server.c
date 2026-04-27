@@ -14,7 +14,7 @@
 #include "server.h"
 
 #define BACKLOG 10
-#define MAX_CLIENTS 100
+#define MAX_CLIENTS 102
 #define TIMEOUT 2000
 
 #define BUFFER_SIZE 1024
