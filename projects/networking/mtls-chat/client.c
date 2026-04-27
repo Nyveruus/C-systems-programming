@@ -20,7 +20,7 @@ static void poll_loop(int socket_fd, SSL_CTX *ctx, SSL *sslo);
 static void monitor(SSL *sslo);
 static int read_client(char *buffer, size_t *total, struct pollfd *fds);
 
-static int new_session_cb(SSL *sslo, SSL_SESSION *ses) {
+int new_session_cb(SSL *sslo, SSL_SESSION *ses) {
     SSL_SESSION_print_fp(stdout, ses);
     return 0;
 }

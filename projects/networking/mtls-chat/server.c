@@ -238,7 +238,7 @@ static void monitor(int index, struct pollfd *fds, SSL **ssls, int *nfds) {
                 SSL_shutdown(ssls[index]);
             case SSL_ERROR_SYSCALL:
             case SSL_ERROR_SSL:
-                printf("Client disconnected\n");
+                printf("[client disconnected]\n");
 
                 SSL_free(ssls[index]);
                 ssls[index] = NULL;
