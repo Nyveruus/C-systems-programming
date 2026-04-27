@@ -8,7 +8,7 @@
 #include "client.h"
 
 void usage(void) {
-    fprintf(stderr, "Usage: ./mtlsapp server [IP] [PORT] [CA] [CERT] [KEY]\n");
+    fprintf(stderr, "Usage: ./mtlsapp server|client [IP] [PORT] [CA] [CERT] [KEY]\n");
     return;
 }
 
