@@ -10,6 +10,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <poll.h>
+#include <fcntl.h>
 
 #include "server.h"
 
@@ -175,6 +176,9 @@ static int tcp_accept_function(int socket_fd, struct pollfd *fds, int *nfds, int
             fds[i].fd = client_fd;
             fds[i].events = POLLIN;
             fds[i].revents = 0;
+
+            int flags = fcntl(client_fd, F_GETFL, 0);
+            fcntl(client_fd, F_SETFL, flags | O_NONBLOCK);
 
             if (i >= *nfds)
                 //+1 because of index
