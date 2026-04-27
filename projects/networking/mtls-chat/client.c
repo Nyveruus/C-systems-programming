@@ -64,6 +64,8 @@ static void setup_context(SSL_CTX **ctx, char *ca, char *cert, char *key) {
         exit(1);
     }
 
+    SSL_CTX_set_min_proto_version(*ctx, TLS1_3_VERSION);
+
     //set caching for ticket
     SSL_CTX_set_session_cache_mode(*ctx, SSL_SESS_CACHE_CLIENT);
     //set callback function to print ticket when session is negotiated
