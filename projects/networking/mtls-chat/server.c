@@ -23,7 +23,7 @@
 static void setup_context(SSL_CTX **ctx, char *ca, char *cert, char *key);
 static void setup_tcp(int *socket_fd, char *ip, int port);
 static void poll_loop(int socket_fd, SSL_CTX *ctx);
-static int tcp_accept_function(int socket_fd, struct pollfd *fds, int *nfds, int *out_index);
+static int tcp_accept_function(int socket_fd, struct pollfd *fds, int *nfds, int *out_index, char *client_addr);
 static int tls_accept_function(SSL **ssls, SSL_CTX *ctx, struct pollfd *fds, int out_index);
 static int read_server(char *buffer, struct pollfd *fds, size_t *total);
 static void broadcast(struct pollfd *fds, char *buffer, size_t total, int nfds, SSL **ssls);
@@ -124,8 +124,9 @@ static void poll_loop(int socket_fd, SSL_CTX *ctx) {
         if (number_revents > 0 && (fds[0].revents & POLLIN)) {
             //tcp
             int out_index;
+            char client_addr[INET_ADDRSTRLEN];
 
-            if (tcp_accept_function(socket_fd, fds, &nfds, &out_index) == 1)
+            if (tcp_accept_function(socket_fd, fds, &nfds, &out_index, client_addr) == 1)
                 continue;
             //tls, if tls fails, close tcp client socket and reset poll with out_index
             if (tls_accept_function(ssls, ctx, fds, out_index) == 1) {
@@ -134,6 +135,8 @@ static void poll_loop(int socket_fd, SSL_CTX *ctx) {
                 nfds--;
                 continue;
             }
+            //print IP of client
+            printf("[client connected: %s]\n", client_addr);
         }
         //read and write STDIN_FILENO
         if (number_revents > 0 && (fds[1].revents & POLLIN)) {
@@ -156,7 +159,7 @@ static void poll_loop(int socket_fd, SSL_CTX *ctx) {
     }
 }
 
-static int tcp_accept_function(int socket_fd, struct pollfd *fds, int *nfds, int *out_index) {
+static int tcp_accept_function(int socket_fd, struct pollfd *fds, int *nfds, int *out_index, char *client_addr) {
     struct sockaddr_in client;
     socklen_t addr_len = sizeof(struct sockaddr);
     int client_fd;
@@ -177,6 +180,10 @@ static int tcp_accept_function(int socket_fd, struct pollfd *fds, int *nfds, int
                 //+1 because of index
                 *nfds = i + 1;
             *out_index = i;
+
+            //client ip
+            inet_ntop(AF_INET, &(client.sin_addr.s_addr), client_addr, INET_ADDRSTRLEN);
+
             return 0;
         }
     fprintf(stderr, "max clients reached\n");
