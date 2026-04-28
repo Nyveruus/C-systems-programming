@@ -10,8 +10,6 @@ This is a continuation and improvement of [TCP Suite](https://github.com/Nyveruu
 
 ![architecture](docs/architecture.jpeg)
 
-//write
-
 ## Build & Usage
 
 ```
@@ -20,7 +18,7 @@ $ ./mtlsapp server|client IP PORT CA CERT KEY
 ```
 ## Generate Certificates & Keys
 
-**CA**
+**CA**: private key, CN & self-signed certificate
 
 ```
 $ openssl req \
@@ -32,7 +30,7 @@ $ openssl req \
     -keyout ca_key.pem \
     -out ca_cert.pem
 ```
-**Server**
+**Server**: private key, CN & CSR (CA generates certificate)
 
 ```
 $ openssl genrsa -out server_cert.pem
@@ -51,7 +49,7 @@ $ openssl x509
     -out server_cert.pem 
 ```
 
-**Client**
+**Client**: private key, CN & CSR (CA generates certificate)
 
 ```
 $ openssl genrsa -out client_cert.pem
@@ -70,4 +68,3 @@ $ openssl x509
     -out client_cert.pem 
 ```
 
-## Examples
