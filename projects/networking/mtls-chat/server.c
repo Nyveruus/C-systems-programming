@@ -241,18 +241,13 @@ static void monitor(int index, struct pollfd *fds, SSL **ssls, int *nfds) {
         switch (SSL_get_error(ssls[index], r)) {
 
             case SSL_ERROR_ZERO_RETURN:
-                SSL_shutdown(ssls[index]);
+                printf("[client disconnected]\n");
+                goto cleanup;
+
             case SSL_ERROR_SYSCALL:
             case SSL_ERROR_SSL:
                 printf("[client disconnected]\n");
-
-                SSL_free(ssls[index]);
-                ssls[index] = NULL;
-
-                close(fds[index].fd);
-                fds[index].fd = -1;
-                (*nfds)--;
-                return;
+                goto error;
 
             case SSL_ERROR_WANT_READ:
             case SSL_ERROR_WANT_WRITE:
@@ -268,6 +263,7 @@ static void monitor(int index, struct pollfd *fds, SSL **ssls, int *nfds) {
 
 cleanup:
     SSL_shutdown(ssls[index]);
+error:
     SSL_free(ssls[index]);
     ssls[index] = NULL;
 
