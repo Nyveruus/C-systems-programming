@@ -8,8 +8,8 @@ This is a continuation and improvement of [TCP Suite](https://github.com/Nyveruu
 
 ## Diagrams
 
-![architecture](/docs/architecture.jpeg)
-![flowchart](/docs/main_flowchart.jpeg)
+![architecture](docs/architecture.jpeg)
+![flowchart](docs/main_flowchart.jpeg)
 
 ## Usage
 
