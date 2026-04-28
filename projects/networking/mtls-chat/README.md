@@ -6,16 +6,18 @@ Select server or client mode at run time
 
 This is a continuation and improvement of [TCP Suite](https://github.com/Nyveruus/systems-programming/tree/main/projects/networking/tcp-suite)
 
-## Architecture
-
-![architecture](docs/architecture.jpeg)
-
 ## Build & Usage
 
 ```
 $ make
 $ ./mtlsapp server|client IP PORT CA CERT KEY
 ```
+
+## Architecture
+
+![architecture](docs/architecture.jpeg)
+
+
 ## Generate Certificates & Keys
 
 **CA**: private key, CN & self-signed certificate
@@ -30,7 +32,7 @@ $ openssl req \
     -keyout ca_key.pem \
     -out ca_cert.pem
 ```
-**Server**: private key, CN & CSR (CA generates certificate)
+**Server**: private key & CSR (CA generates certificate)
 
 ```
 $ openssl genrsa -out server_cert.pem
@@ -49,7 +51,7 @@ $ openssl x509
     -out server_cert.pem 
 ```
 
-**Client**: private key, CN & CSR (CA generates certificate)
+**Client**: private key & CSR (CA generates certificate)
 
 ```
 $ openssl genrsa -out client_cert.pem
