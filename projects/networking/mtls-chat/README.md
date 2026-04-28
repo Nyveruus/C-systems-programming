@@ -6,10 +6,9 @@ Select server or client mode at run time
 
 This is a continuation and improvement of [TCP Suite](https://github.com/Nyveruus/systems-programming/tree/main/projects/networking/tcp-suite)
 
-## Diagrams
+## Architecture
 
 ![architecture](docs/architecture.jpeg)
-![flowchart](docs/main_flowchart.jpeg)
 
 ## Usage
 
