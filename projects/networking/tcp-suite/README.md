@@ -4,6 +4,8 @@ This implements a TCP server and client pair with bounds checking. Clients can s
 
 The server and client take two arguments each: IP and port
 
+Continuation: [mTLS Chat App](https://github.com/Nyveruus/systems-programming/tree/main/projects/networking/mtls-chat)
+
 ## Architecture
 
 The server program creates a server socket, binds to an address and port from arguments, and listens on it. Then it enters an infinite poll loop monitoring three sources: the server socket for new connections (up to 100 clients), stdin for input to broadcast to all connected clients, and each client socket for incoming data to print to stdout. Errors and cleanup are handled gracefully by closing all open file descriptors. The incoming connections are accepted and tracked in a pollfd array, indices 0 and 1 are reserved for the server socket and stdin. Data received from any client is written to stdout and disconnections are detected with zero byte reads. 
