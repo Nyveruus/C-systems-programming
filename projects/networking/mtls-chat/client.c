@@ -16,11 +16,12 @@
 
 static void setup_context(SSL_CTX **ctx, char *ca, char *cert, char *key);
 static void tcp_tls_connect(int *socket_fd, char *ip, int port, SSL_CTX *ctx, SSL **sslo);
-static void poll_loop(int socket_fd, SSL_CTX *ctx, SSL *sslo);
+static void poll_loop(int socket_fd, SSL *sslo);
 static void monitor(SSL *sslo);
 static int read_client(char *buffer, size_t *total, struct pollfd *fds);
 
 int new_session_cb(SSL *sslo, SSL_SESSION *ses) {
+    (void)sslo;
     SSL_SESSION_print_fp(stdout, ses);
     return 0;
 }
@@ -34,7 +35,7 @@ int client(char *ip, int port, char *ca, char *cert, char *key) {
 
     tcp_tls_connect(&socket_fd, ip, port, ctx, &sslo);
 
-    poll_loop(socket_fd, ctx, sslo);
+    poll_loop(socket_fd, sslo);
 
     SSL_CTX_free(ctx);
     return 0;
@@ -115,7 +116,7 @@ static void tcp_tls_connect(int *socket_fd, char *ip, int port, SSL_CTX *ctx, SS
     fcntl(*socket_fd, F_SETFL, flags | O_NONBLOCK); //use OR to avoid overwriting
 }
 
-static void poll_loop(int socket_fd, SSL_CTX *ctx, SSL *sslo) {
+static void poll_loop(int socket_fd, SSL *sslo) {
     struct pollfd fds[2];
     int number_revents, nfds = 2;
 

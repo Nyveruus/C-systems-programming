@@ -14,11 +14,13 @@ void usage(void) {
 
 int select_function(char **argv) {
     if (!strcmp(argv[1], "server"))
-        server(argv[2], atoi(argv[3]), argv[4], argv[5], argv[6]);
+        return server(argv[2], atoi(argv[3]), argv[4], argv[5], argv[6]);
     else if (!strcmp(argv[1], "client"))
-        client(argv[2], atoi(argv[3]), argv[4], argv[5], argv[6]);
+        return client(argv[2], atoi(argv[3]), argv[4], argv[5], argv[6]);
     else
         usage();
+    return 1;
+
 }
 
 int main(int argc, char *argv[]) {
