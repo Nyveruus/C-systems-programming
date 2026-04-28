@@ -10,5 +10,64 @@ This is a continuation and improvement of [TCP Suite](https://github.com/Nyveruu
 
 ![architecture](docs/architecture.jpeg)
 
-## Usage
+//write
 
+## Build & Usage
+
+```
+$ make
+$ ./mtlsapp server|client IP PORT CA CERT KEY
+```
+## Generate Certificates & Keys
+
+**CA**
+
+```
+$ openssl req \
+    -x509 \
+    -nodes \
+    -days 365 \
+    -subj "/CN=ca"
+    -newkey rsa \
+    -keyout ca_key.pem \
+    -out ca_cert.pem
+```
+**Server**
+
+```
+$ openssl genrsa -out server_cert.pem
+$ openssl req -new \
+    -key server_cert.pem \
+    -subj "/CN=server" \
+    -out server_csr.pem
+
+$ openssl x509 
+    -req \
+    -days 365 \
+    -in server_csr.pem \
+    -CA ca_cert.pem \
+    -CAkey ca_key.pem \
+    -CAcreateserial \
+    -out server_cert.pem 
+```
+
+**Client**
+
+```
+$ openssl genrsa -out client_cert.pem
+$ openssl req -new \
+    -key client_cert.pem \
+    -subj "/CN=client1" \
+    -out client_csr.pem
+
+$ openssl x509 
+    -req \
+    -days 365 \
+    -in client_csr.pem \
+    -CA ca_cert.pem \
+    -CAkey ca_key.pem \
+    -CAcreateserial \
+    -out client_cert.pem 
+```
+
+## Examples
