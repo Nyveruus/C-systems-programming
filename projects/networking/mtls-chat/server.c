@@ -192,7 +192,7 @@ static int tcp_accept_function(int socket_fd, struct pollfd *fds, int *nfds, int
 
             return 0;
         }
-    fprintf(stderr, "max clients reached\n");
+    fprintf(stderr, "[max clients reached]\n");
     close(client_fd);
     return 1;
 }
