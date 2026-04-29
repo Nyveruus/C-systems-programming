@@ -33,7 +33,7 @@ The poll loop has 3 jobs: accepting new connections, reading & writing STDIN & m
 
 ### Client
 
-Works similar in structure as its server counterpart, except without fds and ssls * arrays; attempts connection once within a merged tcp_tls_accept() function. SSL context additionaly sets up a SSL session callback function for printing the TLS ticket once connection succeeds. It is important to set the socket to non blocking after the handshake succeeds.
+Works similar in structure as its server counterpart, except without fds and ssls * arrays; attempts connection once within a merged tcp_tls_accept() function. setup_context additionaly sets up a SSL session callback function for printing the TLS ticket once connection succeeds. It is important to set the socket to non blocking after the handshake succeeds.
 
 ## Generate Certificates & Keys
 
