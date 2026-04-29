@@ -1,6 +1,3 @@
-//listen for inocming connections poll, complete tcp handshake, tls handshake, poll, read
-//create ssl object
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
