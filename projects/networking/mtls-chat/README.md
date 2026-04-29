@@ -17,10 +17,13 @@ $ ./mtlsapp server|client IP PORT CA CERT KEY
 
 ![architecture](docs/architecture.jpeg)
 
+main.c is in charge of printing usage and calling the right function depending on the mode. It checks for at least 7 arguments and strcmps argv[1] to either "server" or "client". The next 5 arguments get passed to the function: Internet Protocol address & port to bind to/connect to (TCP), Certificate Authority's certificate to verify peer's certificate, own certificate signed by the Certificate Authority, and private key to sign own certificate (TLS)
+
+
 
 ## Generate Certificates & Keys
 
-**CA**: private key, CN & self-signed certificate
+**CA**: private key & self-signed certificate
 
 ```
 $ openssl req \
@@ -32,7 +35,7 @@ $ openssl req \
     -keyout ca_key.pem \
     -out ca_cert.pem
 ```
-**Server**: private key & CSR (CA generates certificate)
+**Server**: private key & CSR, CA generates certificate
 
 ```
 $ openssl genrsa -out server_key.pem
@@ -50,21 +53,21 @@ $ openssl x509 \
     -out server_cert.pem
 ```
 
-**Client**: private key & CSR (CA generates certificate)
+**Client**: private key & CSR, CA generates certificate
 
 ```
-$ openssl genrsa -out client_key.pem
+$ openssl genrsa -out client1_key.pem
 $ openssl req -new \
-    -key client_key.pem \
+    -key client1_key.pem \
     -subj "/CN=client1" \
-    -out client_csr.pem
+    -out client1_csr.pem
 $ openssl x509 \
     -req \
     -days 365 \
-    -in client_csr.pem \
+    -in client1_csr.pem \
     -CA ca_cert.pem \
     -CAkey ca_key.pem \
     -CAcreateserial \
-    -out client_cert.pem
+    -out client1_cert.pem
 ```
 
